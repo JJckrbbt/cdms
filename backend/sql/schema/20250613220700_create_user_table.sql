@@ -9,7 +9,8 @@ CREATE TABLE "user" (
     "email" VARCHAR(255) UNIQUE NOT NULL,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "is_active" BOOLEAN NOT NULL DEFAULT TRUE  --Account status (active/inactive)
+    "is_active" BOOLEAN NOT NULL DEFAULT TRUE,--Account status (active/inactive)
+    "is_admin" BOOLEAN NOT NULL DEFAULT FALSE -- indicates userr has admin priviledges
 );
 
 -- +goose Down
