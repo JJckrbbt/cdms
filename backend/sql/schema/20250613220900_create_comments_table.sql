@@ -5,7 +5,8 @@ CREATE TABLE "comments" (
     "id" UUID PRIMARY KEY,
     "comment" TEXT NOT NULL,
     "comment_date" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "user_id" UUID NOT NULL -- Foreign key will be added in a later migration
+    "user_id" UUID NOT NULL, -- Foreign key will be added in a later migration
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- +goose Down

@@ -3,8 +3,10 @@
 
 CREATE TABLE "agency_bureau" (
     "agency" VARCHAR(3) NOT NULL,
-    "gsa_bureau_code" VARCHAR(2) NOT NULL,
-    "vendor_code" VARCHAR(8) PRIMARY KEY
+    "bureau_code" VARCHAR(2) NOT NULL,
+    "vendor_code" VARCHAR(8) PRIMARY KEY,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 );
 
 -- +goose Down

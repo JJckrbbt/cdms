@@ -39,7 +39,10 @@ CREATE TABLE "chargeback" (
     "pfs_completion_date" DATE,
     "reconciliation_date" DATE,
     "chargeback_count" SMALLINT,
-    "passed_to_psf" DATE
+    "passed_to_psf" DATE,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "is_active" BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- +goose Down

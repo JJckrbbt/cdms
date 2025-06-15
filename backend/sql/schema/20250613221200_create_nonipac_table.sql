@@ -28,7 +28,12 @@ CREATE TABLE "nonIpac" (
     "customer_poc" UUID, -- Foreign key will be added in a later migration
     "pfs_contacts" SMALLINT NOT NULL,
     "open_date" DATE NOT NULL,
-    "reconciled_date" DATE
+    "reconciled_date" DATE,
+    "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    "is_active" TIMESTAMPTZ NOT NULL DEFAULT TRUE
+
+
 );
 
 -- +goose Down
