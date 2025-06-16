@@ -2,8 +2,8 @@
 -- Create the "chargeback_comments_merge" table
 
 CREATE TABLE "chargeback_comments_merge" (
-    "chargeback_id" UUID NOT NULL,
-    "comment_id" UUID NOT NULL,
+    "chargeback_id" BIGINT NOT NULL,
+    "comment_id" BIGINT NOT NULL,
     PRIMARY KEY ("chargeback_id", "comment_id")
 );
 

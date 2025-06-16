@@ -1,17 +1,17 @@
 -- +goose Up
+-- +goose StatementBegin
 -- Create a generic audit trigger function that captures old and new row data
 
-CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS $body$
+CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS $$
 DECLARE
     audit_table_name TEXT;
     target_id_column TEXT;
-    target_id_value UUID;
+    target_id_value BIGINT;
     -- For UPDATE operations, these variables will hold the old and new row data
     old_row_jsonb JSONB := NULL;
     new_row_jsonb JSONB := NULL;
     -- Optional: Variable to store the user who made the change
-    -- Assumes a current_user_id is set in the session or accessible
-    current_user_id UUID := NULL; -- Or get from context, e.g., current_setting('app.user_id', true)::UUID;
+    current_user_id BIGINT := NULL; -- Adjust to BIGINT if user.id is BIGINT
 BEGIN
     audit_table_name := TG_TABLE_NAME || '_changes';
     target_id_column := 'id'; -- Assuming all audited tables have an 'id' column as PK
@@ -29,14 +29,16 @@ BEGIN
     END IF;
 
     -- Attempt to get the current user ID if it's set in the session
+    -- Ensure 'app.user_id' is set in your application session: SET app.user_id = 'your-user-uuid';
     BEGIN
-        current_user_id := current_setting('app.user_id', true)::UUID;
+        current_user_id := current_setting('app.user_id', true)::BIGINT; -- Adjust to BIGINT if user.id is BIGINT
     EXCEPTION WHEN OTHERS THEN
-        -- If app.user_id is not set or not a valid UUID, current_user_id remains NULL
+        -- If app.user_id is not set or not a valid BIGINT, current_user_id remains NULL
         current_user_id := NULL;
     END;
 
     -- Dynamically insert into the correct audit table
+    -- The table name for the INSERT will be like audit.chargeback_changes, audit.nonipac_changes, audit.user_changes
     EXECUTE format('INSERT INTO audit.%I ('
                    'target_id, operation, changed_by, changed_at, old_data, new_data)'
                    ' VALUES ($1, $2, $3, $4, $5, $6)', audit_table_name)
@@ -49,11 +51,16 @@ BEGIN
 
     RETURN NEW;
 END;
-$body$
+$$
 LANGUAGE plpgsql
-SECURITY DEFINER; -- SECURITY DEFINER allows the trigger to execute with privileges of the function owner
+SECURITY DEFINER;
+
+-- +goose StatementEnd
+
 
 -- +goose Down
+-- +goose StatementBegin
 -- Drop the generic audit trigger function
 
-DROP FUNCTION IF EXISTS audit.if_modified_func() CASCADE; -- CASCADE drops dependent triggers
+DROP FUNCTION IF EXISTS audit.if_modified_func() CASCADE;
+-- +goose StatementEnd

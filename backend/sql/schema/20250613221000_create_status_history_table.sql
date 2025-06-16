@@ -2,11 +2,11 @@
 -- Create the "status_history" table
 
 CREATE TABLE "status_history" (
-    "id" UUID PRIMARY KEY,
+    "id" BIGSERIAL PRIMARY KEY,
     "status" status_history_status NOT NULL,
     "status_date" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "notes" TEXT,
-    "user_id" UUID NOT NULL -- Foreign key will be added in a later migration
+    "user_id" BIGINT NOT NULL -- (FK to user.id)
 );
 
 -- +goose Down

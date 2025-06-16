@@ -12,7 +12,7 @@ CREATE TABLE "ingestion_log" (
     "rows_updated" INTEGER,   -- Rows successfully updated in main tables
     "rows_failed" INTEGER,    -- Rows that failed validation/merge
     "source_identifier" VARCHAR(255), -- e.g., original filename, S3 object key, API call ID
-    "initiated_by_user_id" UUID -- FK to your "user" table (can be NULL for automated processes)
+    "initiated_by_user_id" BIGINT -- FK to your "user" table (can be NULL for automated processes)
 );
 
 -- Add index for efficient lookup by process name and status

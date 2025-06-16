@@ -2,7 +2,7 @@
 -- Create the "chargeback" table
 
 CREATE TABLE "chargeback" (
-    "id" UUID PRIMARY KEY,
+    "id" BIGSERIAL PRIMARY KEY,
     "reporting_source" chargeback_reporting_source NOT NULL,
     "fund" chargeback_fund NOT NULL,
     "business_line" chargeback_business_line NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE "chargeback" (
     "chargeback_amount" NUMERIC(12, 2) NOT NULL,
     "statement" VARCHAR(8) NOT NULL,
     "bd_doc_num" VARCHAR(20) NOT NULL,
-    "vendor" VARCHAR(8) NOT NULL, -- Foreign key will be added in a later migration
+    "vendor" VARCHAR(8) NOT NULL,
     "articles_services" TEXT,
     "current_status" chargeback_status NOT NULL,
     "issue_in_research_date" DATE,
@@ -33,7 +33,7 @@ CREATE TABLE "chargeback" (
     "action" chargeback_action NOT NULL,
     "alc_to_rebill" VARCHAR(50),
     "tas_to_rebill" VARCHAR(50),
-    "line_of_accounting_rebill" VARCHAR(200),
+    "line_of_accounting_rebill" TEXT,
     "special_instruction" VARCHAR(200),
     "new_ipac_document_ref" VARCHAR(30),
     "pfs_completion_date" DATE,

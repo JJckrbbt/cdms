@@ -2,8 +2,8 @@
 -- Create the "non_ipac_customer_poc_merge" table
 
 CREATE TABLE "non_ipac_customer_poc_merge" (
-    "nonipac_id" UUID NOT NULL,
-    "customer_poc_id" UUID NOT NULL,
+    "nonipac_id" BIGINT NOT NULL,
+    "customer_poc_id" BIGINT NOT NULL,
     PRIMARY KEY ("nonipac_id", "customer_poc_id")
 );
 

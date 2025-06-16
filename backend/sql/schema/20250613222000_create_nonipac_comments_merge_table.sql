@@ -2,8 +2,8 @@
 -- Create the "non_ipac_comments_merge" table
 
 CREATE TABLE "non_ipac_comments_merge" (
-    "nonipac_id" UUID NOT NULL,
-    "comment_id" UUID NOT NULL,
+    "nonipac_id" BIGINT NOT NULL,
+    "comment_id" BIGINT NOT NULL,
     PRIMARY KEY ("nonipac_id", "comment_id")
 );
 

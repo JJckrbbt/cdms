@@ -1,11 +1,11 @@
 -- +goose Up
--- Create the "comments" table
+-- Create the "comments" table with created_at and updated_at
 
 CREATE TABLE "comments" (
-    "id" UUID PRIMARY KEY,
+    "id" BIGSERIAL PRIMARY KEY,
     "comment" TEXT NOT NULL,
     "comment_date" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "user_id" UUID NOT NULL, -- Foreign key will be added in a later migration
+    "user_id" BIGINT NOT NULL, -- (FK to user.id)
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

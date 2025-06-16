@@ -2,8 +2,8 @@
 -- Create the "nonipac_status_merge" table
 
 CREATE TABLE "nonipac_status_merge" (
-    "nonipac_id" UUID NOT NULL,
-    "status_history_id" UUID NOT NULL,
+    "nonipac_id" BIGINT NOT NULL,
+    "status_history_id" BIGINT NOT NULL,
     PRIMARY KEY ("nonipac_id", "status_history_id")
 );
 

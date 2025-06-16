@@ -2,7 +2,7 @@
 -- Create the junction table for many-to-many user-to-business-line access
 
 CREATE TABLE "user_business_line_access" (
-    "user_id" UUID NOT NULL,
+    "user_id" BIGINT NOT NULL,
     "business_line" chargeback_business_line NOT NULL, -- Reuses the ENUM for consistency
     PRIMARY KEY ("user_id", "business_line")
 );
