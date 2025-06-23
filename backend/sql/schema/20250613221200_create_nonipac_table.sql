@@ -1,7 +1,7 @@
 -- +goose Up
 -- Create the "nonIpac" table
 
-CREATE TABLE "nonIpac" (
+CREATE TABLE "nonipac" (
     "id" BIGSERIAL PRIMARY KEY,
     "reporting_source" nonipac_reporting_source NOT NULL,
     "business_line" chargeback_business_line NOT NULL,
@@ -19,15 +19,15 @@ CREATE TABLE "nonIpac" (
     "vendor" VARCHAR(255) NOT NULL,
     "debt_appeal_forbearance" BOOLEAN NOT NULL,
     "statement" VARCHAR(8) NOT NULL,
-    "document_number" VARCHAR(20) NOT NULL,
+    "document_number" VARCHAR(20) NOT NULL UNIQUE,
     "vendor_code" VARCHAR(8) NOT NULL,
     "collection_due_date" DATE NOT NULL,
     "current_status" nonipac_status,
     "pfs_poc" BIGINT, -- (FK to user.id)
     "gsa_poc" BIGINT, -- (FK to user.id)
     "customer_poc" BIGINT, -- (FK to customer_poc.id)
-    "pfs_contacts" SMALLINT NOT NULL,
-    "open_date" DATE NOT NULL,
+    "pfs_contacts" SMALLINT,
+    "open_date" DATE NOT NULL DEFAULT NOW(),
     "reconciled_date" DATE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -37,4 +37,4 @@ CREATE TABLE "nonIpac" (
 -- +goose Down
 -- Drop the "nonIpac" table
 
-DROP TABLE IF EXISTS "nonIpac";
+DROP TABLE IF EXISTS "nonipac";

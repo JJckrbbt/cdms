@@ -1,5 +1,5 @@
 -- +goose Up
--- Create views for active chargebacks and nonIpac records, joined with vendor info
+-- Create views for active chargebacks and nonipac records, joined with vendor info
 
 CREATE VIEW active_chargebacks_with_vendor_info AS
 SELECT
@@ -85,7 +85,7 @@ SELECT
     ab.agency AS agency_id,
     ab.bureau_code AS bureau_code
 FROM
-    "nonIpac" ni
+    "nonipac" ni
 JOIN
     "agency_bureau" ab ON ni.address_code = ab."vendor_code"
 WHERE

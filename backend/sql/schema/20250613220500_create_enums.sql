@@ -14,7 +14,8 @@ CREATE TYPE chargeback_status AS ENUM (
   'In Research',
   'Passed to PFS',
   'Completed by PFS',
-  'PFS Return to GSA'
+  'PFS Return to GSA',
+  'New'
 );
 
 CREATE TYPE chargeback_reason_code AS ENUM (
@@ -77,7 +78,7 @@ CREATE TYPE chargeback_fund AS ENUM (
 
 CREATE TYPE nonipac_reporting_source AS ENUM (
   'ApplicationCreated',
-  'Outstanding_Bills'
+  'OUTSTANDING_BILLS'
 );
 
 CREATE TYPE nonipac_status AS ENUM (
