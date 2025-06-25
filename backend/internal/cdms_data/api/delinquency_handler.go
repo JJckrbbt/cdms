@@ -5,10 +5,13 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jjckrbbt/cdms/backend/internal/db"
 	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
 )
 
 type DelinquencyHandler struct {
@@ -23,8 +26,105 @@ func NewDelinquencyHandler(q db.Querier, logger *slog.Logger) *DelinquencyHandle
 	}
 }
 
-func (h *DelinquencyHandler) HandleList(c echo.Context) error {
-	// ... (pagination logic is the same)
+// CreateDelinquencyRequest defines the JSON body for creating a delinquency.
+type CreateDelinquencyRequest struct {
+	BusinessLine                string          `json:"business_line"`
+	BilledTotalAmount           decimal.Decimal `json:"billed_total_amount"`
+	PrincipleAmount             decimal.Decimal `json:"principle_amount"`
+	InterestAmount              decimal.Decimal `json:"interest_amount"`
+	PenaltyAmount               decimal.Decimal `json:"penalty_amount"`
+	AdministrationChargesAmount decimal.Decimal `json:"administration_charges_amount"`
+	DebitOutstandingAmount      decimal.Decimal `json:"debit_outstanding_amount"`
+	CreditTotalAmount           decimal.Decimal `json:"credit_total_amount"`
+	CreditOutstandingAmount     decimal.Decimal `json:"credit_outstanding_amount"`
+	DocumentDate                string          `json:"document_date"`
+	AddressCode                 string          `json:"address_code"`
+	Vendor                      string          `json:"vendor"`
+	DebtAppealForbearance       bool            `json:"debt_appeal_forbearance"`
+	Statement                   string          `json:"statement"`
+	DocumentNumber              string          `json:"document_number"`
+	VendorCode                  string          `json:"vendor_code"`
+	CollectionDueDate           string          `json:"collection_due_date"`
+	OpenDate                    string          `json:"open_date"`
+	Title                       *string         `json:"title"`
+	CurrentStatus               *string         `json:"current_status"`
+}
+
+// HandleCreate handles POST /api/outstanding
+func (h *DelinquencyHandler) HandleCreate(c echo.Context) error {
+	var req CreateDelinquencyRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body: "+err.Error())
+	}
+
+	// --- Input Validation & Type Conversion ---
+	docDate, err := time.Parse("2006-01-02", req.DocumentDate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid document_date format, expected YYYY-MM-DD")
+	}
+	collectionDueDate, err := time.Parse("2006-01-02", req.CollectionDueDate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid collection_due_date format, expected YYYY-MM-DD")
+	}
+	openDate, err := time.Parse("2006-01-02", req.OpenDate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid open_date format, expected YYYY-MM-DD")
+	}
+
+	params := db.CreateDelinquencyParams{
+		BusinessLine:                db.ChargebackBusinessLine(req.BusinessLine),
+		BilledTotalAmount:           pgtype.Numeric{Int: req.BilledTotalAmount.BigInt(), Valid: true},
+		PrincipleAmount:             pgtype.Numeric{Int: req.PrincipleAmount.BigInt(), Valid: true},
+		InterestAmount:              pgtype.Numeric{Int: req.InterestAmount.BigInt(), Valid: true},
+		PenaltyAmount:               pgtype.Numeric{Int: req.PenaltyAmount.BigInt(), Valid: true},
+		AdministrationChargesAmount: pgtype.Numeric{Int: req.AdministrationChargesAmount.BigInt(), Valid: true},
+		DebitOutstandingAmount:      pgtype.Numeric{Int: req.DebitOutstandingAmount.BigInt(), Valid: true},
+		CreditTotalAmount:           pgtype.Numeric{Int: req.CreditTotalAmount.BigInt(), Valid: true},
+		CreditOutstandingAmount:     pgtype.Numeric{Int: req.CreditOutstandingAmount.BigInt(), Valid: true},
+		DocumentDate:                pgtype.Date{Time: docDate, Valid: true},
+		AddressCode:                 req.AddressCode,
+		Vendor:                      req.Vendor,
+		DebtAppealForbearance:       req.DebtAppealForbearance,
+		Statement:                   req.Statement,
+		DocumentNumber:              req.DocumentNumber,
+		VendorCode:                  req.VendorCode,
+		CollectionDueDate:           pgtype.Date{Time: collectionDueDate, Valid: true},
+		OpenDate:                    pgtype.Date{Time: openDate, Valid: true},
+		Title:                       pgtype.Text{String: derefString(req.Title), Valid: req.Title != nil},
+		CurrentStatus:               db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(derefStringWithDefault(req.CurrentStatus, "Open")), Valid: true},
+	}
+
+	delinquency, err := h.queries.CreateDelinquency(c.Request().Context(), params)
+	if err != nil {
+		h.logger.ErrorContext(c.Request().Context(), "Failed to create delinquency in database", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create delinquency")
+	}
+
+	return c.JSON(http.StatusCreated, delinquency)
+}
+
+func (h *DelinquencyHandler) HandleGetDelinquencies(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	documentNumber := c.QueryParam("documentNumber")
+
+	if documentNumber != "" {
+		h.logger.InfoContext(ctx, "Performing lookup by business key")
+
+		delinquency, err := h.queries.GetActiveDelinquencyByBusinessKey(ctx, documentNumber)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return echo.NewHTTPError(http.StatusNotFound, "Delinquency not found for given business key")
+			}
+			h.logger.ErrorContext(ctx, "Failedto get delinuquency by business key", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve delinquency")
+		}
+
+		return c.JSON(http.StatusOK, delinquency)
+	}
+
+	h.logger.InfoContext(ctx, "Performing paginated list lookup for delinquencies")
+
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
 		limit = 50

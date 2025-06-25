@@ -5,11 +5,43 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jjckrbbt/cdms/backend/internal/db"
 	"github.com/labstack/echo/v4"
+	"github.com/shopspring/decimal"
 )
+
+type CreateChargebackRequest struct {
+	Fund              string          `json:"fund"`
+	BusinessLine      string          `json:"business_line"`
+	Region            int16           `json:"region"`
+	Program           string          `json:"program"`
+	ALNum             int16           `json:"al_num"`
+	SourceNum         string          `json:"source_num"`
+	ALC               string          `json:"alc"`
+	CustomerTAS       string          `json:"customer_tas"`
+	TaskSubtask       string          `json:"task_subtask"`
+	CustomerName      string          `json:"customer_name"`
+	OrgCode           string          `json:"org_code"`
+	DocumentDate      string          `json:"document_date"` // Expect dates as "YYYY-MM-DD" strings
+	AccompDate        string          `json:"accomp_date"`
+	ChargebackAmount  decimal.Decimal `json:"chargeback_amount"`
+	Statement         string          `json:"statement"`
+	BDDocNum          string          `json:"bd_doc_num"`
+	Vendor            string          `json:"vendor"`
+	LocationSystem    *string         `json:"location_system"`
+	AgreementNum      *string         `json:"agreement_num"`
+	Title             *string         `json:"title"`
+	ClassID           *string         `json:"class_id"`
+	AssignedRebillDRN *string         `json:"assigned_rebill_drn"`
+	ArticlesServices  *string         `json:"articles_services"`
+	CurrentStatus     *string         `json:"current_status"`
+	ReasonCode        *string         `json:"reason_code"`
+	Action            *string         `json:"action"`
+}
 
 type ChargebackHandler struct {
 	queries db.Querier
@@ -23,8 +55,97 @@ func NewChargebackHandler(q db.Querier, logger *slog.Logger) *ChargebackHandler 
 	}
 }
 
+// HandleCreate handles POST /api/chargebacks
+func (h *ChargebackHandler) HandleCreate(c echo.Context) error {
+	var req CreateChargebackRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body "+err.Error())
+	}
+
+	docDate, err := time.Parse("2006-01-02", req.DocumentDate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid document-date format, expected YYY-MM-DD")
+	}
+	accompDate, err := time.Parse("2006-01-02", req.AccompDate)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid accomp_date format, expected YYYY-MM-DD")
+	}
+
+	// Params for DB Call
+	params := db.CreateChargebackParams{
+		Fund:              db.ChargebackFund(req.Fund),
+		BusinessLine:      db.ChargebackBusinessLine(req.BusinessLine),
+		Region:            req.Region,
+		Program:           req.Program,
+		AlNum:             req.ALNum,
+		SourceNum:         req.SourceNum,
+		Alc:               req.ALC,
+		CustomerTas:       req.CustomerTAS,
+		TaskSubtask:       req.TaskSubtask,
+		CustomerName:      req.CustomerName,
+		OrgCode:           req.OrgCode,
+		DocumentDate:      pgtype.Date{Time: docDate, Valid: true},
+		AccompDate:        pgtype.Date{Time: accompDate, Valid: true},
+		ChargebackAmount:  pgtype.Numeric{Int: req.ChargebackAmount.BigInt(), Valid: true},
+		Statement:         req.Statement,
+		BdDocNum:          req.BDDocNum,
+		Vendor:            req.Vendor,
+		LocationSystem:    pgtype.Text{String: derefString(req.LocationSystem), Valid: req.LocationSystem != nil},
+		AgreementNum:      pgtype.Text{String: derefString(req.AgreementNum), Valid: req.AgreementNum != nil},
+		Title:             pgtype.Text{String: derefString(req.Title), Valid: req.Title != nil},
+		ClassID:           pgtype.Text{String: derefString(req.ClassID), Valid: req.ClassID != nil},
+		AssignedRebillDrn: pgtype.Text{String: derefString(req.AssignedRebillDRN), Valid: req.AssignedRebillDRN != nil},
+		ArticlesServices:  pgtype.Text{String: derefString(req.ArticlesServices), Valid: req.ArticlesServices != nil},
+		CurrentStatus:     db.ChargebackStatus(derefStringWithDefault(req.CurrentStatus, "Open")),
+		ReasonCode:        db.NullChargebackReasonCode{ChargebackReasonCode: db.ChargebackReasonCode(derefString(req.ReasonCode)), Valid: req.ReasonCode != nil},
+		Action:            db.NullChargebackAction{ChargebackAction: db.ChargebackAction(derefString(req.Action)), Valid: req.Action != nil},
+	}
+
+	chargeback, err := h.queries.CreateChargeback(c.Request().Context(), params)
+	if err != nil {
+		h.logger.ErrorContext(c.Request().Context(), "Failed to create chargeback in database", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create chargeback")
+	}
+	return c.JSON(http.StatusCreated, chargeback)
+}
+
 // HandleList handles GET /api/chargebacks
-func (h *ChargebackHandler) HandleList(c echo.Context) error {
+func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	// Check for Business Key Lookup query parameters
+	bdDocNum := c.QueryParam("bd_doc_num")
+	alNumStr := c.QueryParam("al_num")
+
+	if bdDocNum != "" && alNumStr != "" {
+		// --- Logic for getting a single item by business key ---
+		h.logger.InfoContext(ctx, "Performing lookup by business key", "bd_doc_num", bdDocNum, "al_num", alNumStr)
+
+		alNum, err := strconv.ParseInt(alNumStr, 10, 16)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, "Invalid al_num format, must be a number.")
+		}
+
+		params := db.GetActiveChargebackByBusinessKeyParams{
+			BdDocNum: bdDocNum,
+			AlNum:    int16(alNum),
+		}
+
+		chargeback, err := h.queries.GetActiveChargebackByBusinessKey(ctx, params)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return echo.NewHTTPError(http.StatusNotFound, "Chargeback not found for the given business key")
+			}
+			h.logger.ErrorContext(ctx, "Failed to get chargeback by business key", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargeback")
+		}
+
+		return c.JSON(http.StatusOK, chargeback)
+	}
+
+	// --- Fallback to Pagination Logic for getting a list ---
+	h.logger.InfoContext(ctx, "Performing paginated list lookup for chargebacks")
+
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
 	if err != nil || limit <= 0 {
 		limit = 50
@@ -35,14 +156,14 @@ func (h *ChargebackHandler) HandleList(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 
-	params := db.ListActiveChargebacksParams{
+	listParams := db.ListActiveChargebacksParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
 
-	chargebacks, err := h.queries.ListActiveChargebacks(c.Request().Context(), params)
+	chargebacks, err := h.queries.ListActiveChargebacks(ctx, listParams)
 	if err != nil {
-		h.logger.ErrorContext(c.Request().Context(), "Failed to list active chargebacks", "error", err)
+		h.logger.ErrorContext(ctx, "Failed to list active chargebacks", "error", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargebacks")
 	}
 

@@ -11,13 +11,23 @@ import (
 )
 
 type Querier interface {
+	// Inserts a new chargeback record,from a manual UI entry.
+	// The 'reporting_source' is hardcoded to 'ApplicationCreated'.
+	CreateChargeback(ctx context.Context, arg CreateChargebackParams) (Chargeback, error)
+	// Inserts a new delinquency (nonipac) record, from a manual UI entry.
+	// The 'reporting_source' is hardcoded to 'ApplicationCreated'.
+	CreateDelinquency(ctx context.Context, arg CreateDelinquencyParams) (Nonipac, error)
 	// Create a record to track a new file upload
 	CreateUpload(ctx context.Context, arg CreateUploadParams) (Upload, error)
 	// Mark all existing chargebacks from a specific report source as inactive before an UPSERT
 	DeactivateChargebacksBySource(ctx context.Context, reportingSource ChargebackReportingSource) error
 	DeactivateNonIpacsBySource(ctx context.Context, reportingSource NonipacReportingSource) error
+	// Fetches a single active chargeback by business key
+	GetActiveChargebackByBusinessKey(ctx context.Context, arg GetActiveChargebackByBusinessKeyParams) (ActiveChargebacksWithVendorInfo, error)
 	// Fetches a single active chargeback by its primary key from the view.
 	GetActiveChargebackByID(ctx context.Context, id int64) (ActiveChargebacksWithVendorInfo, error)
+	// Fetches a single active delinquency by business key
+	GetActiveDelinquencyByBusinessKey(ctx context.Context, documentNumber string) (ActiveNonipacWithVendorInfo, error)
 	// Fetches a single active delinquency by its primary key from the view.
 	GetActiveDelinquencyByID(ctx context.Context, id int64) (ActiveNonipacWithVendorInfo, error)
 	// For a given list of bd_doc_nums, fetch the full business key and reporting source

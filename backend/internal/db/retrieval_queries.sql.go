@@ -9,6 +9,66 @@ import (
 	"context"
 )
 
+const getActiveChargebackByBusinessKey = `-- name: GetActiveChargebackByBusinessKey :one
+SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code FROM active_chargebacks_with_vendor_info
+WHERE bd_doc_num = $1 AND al_num = $2
+`
+
+type GetActiveChargebackByBusinessKeyParams struct {
+	BdDocNum string `json:"bd_doc_num"`
+	AlNum    int16  `json:"al_num"`
+}
+
+// Fetches a single active chargeback by business key
+func (q *Queries) GetActiveChargebackByBusinessKey(ctx context.Context, arg GetActiveChargebackByBusinessKeyParams) (ActiveChargebacksWithVendorInfo, error) {
+	row := q.db.QueryRow(ctx, getActiveChargebackByBusinessKey, arg.BdDocNum, arg.AlNum)
+	var i ActiveChargebacksWithVendorInfo
+	err := row.Scan(
+		&i.ID,
+		&i.Fund,
+		&i.BusinessLine,
+		&i.Region,
+		&i.LocationSystem,
+		&i.Program,
+		&i.AlNum,
+		&i.SourceNum,
+		&i.AgreementNum,
+		&i.Title,
+		&i.Alc,
+		&i.CustomerTas,
+		&i.TaskSubtask,
+		&i.ClassID,
+		&i.CustomerName,
+		&i.OrgCode,
+		&i.DocumentDate,
+		&i.AccompDate,
+		&i.AssignedRebillDrn,
+		&i.ChargebackAmount,
+		&i.Statement,
+		&i.BdDocNum,
+		&i.Vendor,
+		&i.ArticlesServices,
+		&i.CurrentStatus,
+		&i.IssueInResearchDate,
+		&i.ReasonCode,
+		&i.Action,
+		&i.AlcToRebill,
+		&i.TasToRebill,
+		&i.LineOfAccountingRebill,
+		&i.SpecialInstruction,
+		&i.NewIpacDocumentRef,
+		&i.PfsCompletionDate,
+		&i.ReconciliationDate,
+		&i.ChargebackCount,
+		&i.PassedToPsf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AgencyID,
+		&i.BureauCode,
+	)
+	return i, err
+}
+
 const getActiveChargebackByID = `-- name: GetActiveChargebackByID :one
 SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code FROM active_chargebacks_with_vendor_info
 WHERE id = $1
@@ -56,6 +116,50 @@ func (q *Queries) GetActiveChargebackByID(ctx context.Context, id int64) (Active
 		&i.ReconciliationDate,
 		&i.ChargebackCount,
 		&i.PassedToPsf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.AgencyID,
+		&i.BureauCode,
+	)
+	return i, err
+}
+
+const getActiveDelinquencyByBusinessKey = `-- name: GetActiveDelinquencyByBusinessKey :one
+SELECT id, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, current_status, document_number, vendor_code, collection_due_date, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, agency_id, bureau_code FROM active_nonipac_with_vendor_info
+WHERE document_number = $1
+`
+
+// Fetches a single active delinquency by business key
+func (q *Queries) GetActiveDelinquencyByBusinessKey(ctx context.Context, documentNumber string) (ActiveNonipacWithVendorInfo, error) {
+	row := q.db.QueryRow(ctx, getActiveDelinquencyByBusinessKey, documentNumber)
+	var i ActiveNonipacWithVendorInfo
+	err := row.Scan(
+		&i.ID,
+		&i.BusinessLine,
+		&i.BilledTotalAmount,
+		&i.PrincipleAmount,
+		&i.InterestAmount,
+		&i.PenaltyAmount,
+		&i.AdministrationChargesAmount,
+		&i.DebitOutstandingAmount,
+		&i.CreditTotalAmount,
+		&i.CreditOutstandingAmount,
+		&i.Title,
+		&i.DocumentDate,
+		&i.AddressCode,
+		&i.Vendor,
+		&i.DebtAppealForbearance,
+		&i.Statement,
+		&i.CurrentStatus,
+		&i.DocumentNumber,
+		&i.VendorCode,
+		&i.CollectionDueDate,
+		&i.PfsPoc,
+		&i.GsaPoc,
+		&i.CustomerPoc,
+		&i.PfsContacts,
+		&i.OpenDate,
+		&i.ReconciledDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.AgencyID,
