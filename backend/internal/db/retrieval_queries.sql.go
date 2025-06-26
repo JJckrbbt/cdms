@@ -212,6 +212,105 @@ func (q *Queries) GetActiveDelinquencyByID(ctx context.Context, id int64) (Activ
 	return i, err
 }
 
+const getChargebackForUpdate = `-- name: GetChargebackForUpdate :one
+SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active FROM chargeback
+WHERE id = $1 LIMIT 1
+`
+
+// Fetches a single chargeback directly from the base table for updating.
+func (q *Queries) GetChargebackForUpdate(ctx context.Context, id int64) (Chargeback, error) {
+	row := q.db.QueryRow(ctx, getChargebackForUpdate, id)
+	var i Chargeback
+	err := row.Scan(
+		&i.ID,
+		&i.ReportingSource,
+		&i.Fund,
+		&i.BusinessLine,
+		&i.Region,
+		&i.LocationSystem,
+		&i.Program,
+		&i.AlNum,
+		&i.SourceNum,
+		&i.AgreementNum,
+		&i.Title,
+		&i.Alc,
+		&i.CustomerTas,
+		&i.TaskSubtask,
+		&i.ClassID,
+		&i.CustomerName,
+		&i.OrgCode,
+		&i.DocumentDate,
+		&i.AccompDate,
+		&i.AssignedRebillDrn,
+		&i.ChargebackAmount,
+		&i.Statement,
+		&i.BdDocNum,
+		&i.Vendor,
+		&i.ArticlesServices,
+		&i.CurrentStatus,
+		&i.IssueInResearchDate,
+		&i.ReasonCode,
+		&i.Action,
+		&i.AlcToRebill,
+		&i.TasToRebill,
+		&i.LineOfAccountingRebill,
+		&i.SpecialInstruction,
+		&i.NewIpacDocumentRef,
+		&i.PfsCompletionDate,
+		&i.ReconciliationDate,
+		&i.ChargebackCount,
+		&i.PassedToPsf,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
+}
+
+const getDelinquencyForUpdate = `-- name: GetDelinquencyForUpdate :one
+SELECT id, reporting_source, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, document_number, vendor_code, collection_due_date, current_status, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, is_active FROM nonipac
+WHERE id = $1 LIMIT 1
+`
+
+// Fetches a single chargeback directly from the base table for updating.
+func (q *Queries) GetDelinquencyForUpdate(ctx context.Context, id int64) (Nonipac, error) {
+	row := q.db.QueryRow(ctx, getDelinquencyForUpdate, id)
+	var i Nonipac
+	err := row.Scan(
+		&i.ID,
+		&i.ReportingSource,
+		&i.BusinessLine,
+		&i.BilledTotalAmount,
+		&i.PrincipleAmount,
+		&i.InterestAmount,
+		&i.PenaltyAmount,
+		&i.AdministrationChargesAmount,
+		&i.DebitOutstandingAmount,
+		&i.CreditTotalAmount,
+		&i.CreditOutstandingAmount,
+		&i.Title,
+		&i.DocumentDate,
+		&i.AddressCode,
+		&i.Vendor,
+		&i.DebtAppealForbearance,
+		&i.Statement,
+		&i.DocumentNumber,
+		&i.VendorCode,
+		&i.CollectionDueDate,
+		&i.CurrentStatus,
+		&i.PfsPoc,
+		&i.GsaPoc,
+		&i.CustomerPoc,
+		&i.PfsContacts,
+		&i.OpenDate,
+		&i.ReconciledDate,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.IsActive,
+	)
+	return i, err
+}
+
 const listActiveChargebacks = `-- name: ListActiveChargebacks :many
 SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code FROM active_chargebacks_with_vendor_info
 ORDER BY document_date DESC

@@ -11,6 +11,10 @@ import (
 )
 
 type Querier interface {
+	// Updates the admin-modifiable fields of a specific chargeback record
+	AdminUpdateChargeback(ctx context.Context, arg AdminUpdateChargebackParams) (Chargeback, error)
+	// Updates the admin-modifiable fields of a specific delinquency record
+	AdminUpdateDelinquency(ctx context.Context, arg AdminUpdateDelinquencyParams) (Nonipac, error)
 	// Inserts a new chargeback record,from a manual UI entry.
 	// The 'reporting_source' is hardcoded to 'ApplicationCreated'.
 	CreateChargeback(ctx context.Context, arg CreateChargebackParams) (Chargeback, error)
@@ -30,9 +34,13 @@ type Querier interface {
 	GetActiveDelinquencyByBusinessKey(ctx context.Context, documentNumber string) (ActiveNonipacWithVendorInfo, error)
 	// Fetches a single active delinquency by its primary key from the view.
 	GetActiveDelinquencyByID(ctx context.Context, id int64) (ActiveNonipacWithVendorInfo, error)
+	// Fetches a single chargeback directly from the base table for updating.
+	GetChargebackForUpdate(ctx context.Context, id int64) (Chargeback, error)
 	// For a given list of bd_doc_nums, fetch the full business key and reporting source
 	// to check for cross-report conflicts in Go before an UPSERT.
 	GetChargebackSourcesByBDDocNums(ctx context.Context, dollar_1 []string) ([]GetChargebackSourcesByBDDocNumsRow, error)
+	// Fetches a single chargeback directly from the base table for updating.
+	GetDelinquencyForUpdate(ctx context.Context, id int64) (Nonipac, error)
 	// Retrieve a detailed summary for a specific upload
 	GetUpload(ctx context.Context, id pgtype.UUID) (Upload, error)
 	// //go:generate mockery --name Querier --output ./mocks --outpkg mocks
@@ -44,6 +52,10 @@ type Querier interface {
 	ListActiveDelinquencies(ctx context.Context, arg ListActiveDelinquenciesParams) ([]ActiveNonipacWithVendorInfo, error)
 	// Provides a paginated list of recent report uploads and their statuses
 	ListUploads(ctx context.Context, arg ListUploadsParams) ([]Upload, error)
+	// Updates the user-modifiable fields of a specific chargeback record
+	PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargebackParams) (Chargeback, error)
+	// Updates the user-modifiable fields of a specific delinquency record
+	PFSUpdateDelinquency(ctx context.Context, arg PFSUpdateDelinquencyParams) (Nonipac, error)
 	// Update the status of an upload record after processing is complete or has failed
 	UpdateUploadStatus(ctx context.Context, arg UpdateUploadStatusParams) error
 	UpsertAgencyBureaus(ctx context.Context) (int64, error)
@@ -52,6 +64,10 @@ type Querier interface {
 	UpsertChargebacks(ctx context.Context) (int64, error)
 	// The business key for delinquencies is Document Number
 	UpsertNonIpacs(ctx context.Context) (int64, error)
+	// Updates the user-modifiable fields of a specific chargeback record
+	UserUpdateChargeback(ctx context.Context, arg UserUpdateChargebackParams) (Chargeback, error)
+	// Updates the user-modifiable fields of a specific delinquency record
+	UserUpdateDelinquency(ctx context.Context, arg UserUpdateDelinquencyParams) (Nonipac, error)
 }
 
 var _ Querier = (*Queries)(nil)

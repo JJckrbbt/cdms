@@ -14,6 +14,44 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// --- Request Structs for PATCH operations ---
+
+// UserUpdateChargebackRequest defines fields a regular user can modify.
+type UserUpdateChargebackRequest struct {
+	CurrentStatus          *string `json:"current_status"`
+	ReasonCode             *string `json:"reason_code"`
+	Action                 *string `json:"action"`
+	IssueInResearchDate    *string `json:"issue_in_research_date"` // YYYY-MM-DD
+	ALCToRebill            *string `json:"alc_to_rebill"`
+	TASToRebill            *string `json:"tas_to_rebill"`
+	LineOfAccountingRebill *string `json:"line_of_accounting_rebill"`
+	SpecialInstruction     *string `json:"special_instruction"`
+	PassedToPSF            *string `json:"passed_to_psf"` // YYYY-MM-DD
+}
+
+// PFSUpdateChargebackRequest defines fields a PFS user can modify.
+type PFSUpdateChargebackRequest struct {
+	CurrentStatus      *string `json:"current_status"`
+	PassedToPSF        *string `json:"passed_to_psf"` // YYYY-MM-DD
+	NewIPACDocumentRef *string `json:"new_ipac_document_ref"`
+	PFSCompletionDate  *string `json:"pfs_completion_date"` // YYYY-MM-DD
+}
+
+// AdminUpdateChargebackRequest defines fields an Admin can modify.
+type AdminUpdateChargebackRequest struct {
+	CurrentStatus          *string `json:"current_status"`
+	ReasonCode             *string `json:"reason_code"`
+	Action                 *string `json:"action"`
+	IssueInResearchDate    *string `json:"issue_in_research_date"`
+	ALCToRebill            *string `json:"alc_to_rebill"`
+	TASToRebill            *string `json:"tas_to_rebill"`
+	LineOfAccountingRebill *string `json:"line_of_accounting_rebill"`
+	SpecialInstruction     *string `json:"special_instruction"`
+	PassedToPSF            *string `json:"passed_to_psf"`
+	PFSCompletionDate      *string `json:"pfs_completion_date"`
+}
+
+// Create Chargeback Struct defines fields an Admin uses to manually create Chargeback
 type CreateChargebackRequest struct {
 	Fund              string          `json:"fund"`
 	BusinessLine      string          `json:"business_line"`
@@ -189,4 +227,67 @@ func (h *ChargebackHandler) HandleGetByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, chargeback)
+}
+
+// HandleUpdate now contains logic to differentiate based on user role.
+func (h *ChargebackHandler) HandleUpdate(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	// This role would come from validated JWT middleware in a real application
+	userRole := c.Request().Header.Get("X-User-Role")
+	if userRole == "" {
+		userRole = "user" // Default to least privileged
+	}
+
+	// Fetch existing record to merge changes onto
+	existing, err := h.queries.GetChargebackForUpdate(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return echo.NewHTTPError(http.StatusNotFound, "Chargeback not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargeback for update")
+	}
+
+	var updatedChargeback db.Chargeback
+	var updateErr error
+
+	switch userRole {
+	case "admin":
+		var req AdminUpdateChargebackRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+		params := buildAdminUpdateParams(&req, &existing)
+		updatedChargeback, updateErr = h.queries.AdminUpdateChargeback(ctx, params)
+
+	case "pfs":
+		var req PFSUpdateChargebackRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+		params := buildPFSUpdateParams(&req, &existing)
+		updatedChargeback, updateErr = h.queries.PFSUpdateChargeback(ctx, params)
+
+	case "user":
+		fallthrough
+	default:
+		var req UserUpdateChargebackRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+		params := buildUserUpdateParams(&req, &existing)
+		updatedChargeback, updateErr = h.queries.UserUpdateChargeback(ctx, params)
+	}
+
+	if updateErr != nil {
+		h.logger.ErrorContext(ctx, "Failed to update chargeback", "error", updateErr, "id", id, "role", userRole)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update chargeback")
+	}
+
+	return c.JSON(http.StatusOK, updatedChargeback)
 }

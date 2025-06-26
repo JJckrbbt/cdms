@@ -156,12 +156,14 @@ func main() {
 	chargebackRoutes.GET("", chargebackHandler.HandleGetChargebacks)
 	chargebackRoutes.GET("/:id", chargebackHandler.HandleGetByID)
 	chargebackRoutes.POST("", chargebackHandler.HandleCreate)
+	chargebackRoutes.PATCH("/:id", chargebackHandler.HandleUpdate)
 
 	//Delinquency group
 	delinquencyRoutes := e.Group("/api/delinquencies")
 	delinquencyRoutes.GET("", delinquencyHandler.HandleGetDelinquencies)
 	delinquencyRoutes.GET("/:id", delinquencyHandler.HandleGetByID)
 	delinquencyRoutes.POST("", delinquencyHandler.HandleCreate)
+	delinquencyRoutes.PATCH("/:id", delinquencyHandler.HandleUpdate)
 
 	// 8. Start the HTTP server.
 	port := ":8080"

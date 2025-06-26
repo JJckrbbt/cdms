@@ -35,3 +35,14 @@ WHERE bd_doc_num = $1 AND al_num = $2;
 SELECT * FROM active_nonipac_with_vendor_info
 WHERE document_number = $1;
 
+-- name: GetChargebackForUpdate :one
+-- Fetches a single chargeback directly from the base table for updating.
+SELECT * FROM chargeback
+WHERE id = $1 LIMIT 1;
+
+-- name: GetDelinquencyForUpdate :one
+-- Fetches a single chargeback directly from the base table for updating.
+SELECT * FROM nonipac
+WHERE id = $1 LIMIT 1;
+
+

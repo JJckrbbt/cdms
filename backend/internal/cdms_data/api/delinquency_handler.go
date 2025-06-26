@@ -14,6 +14,21 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// --- Request Structs for PATCH ---
+// We define separate structs for extensibility, as you planned.
+
+type UserUpdateDelinquencyRequest struct {
+	CurrentStatus *string `json:"current_status"`
+}
+
+type PFSUpdateDelinquencyRequest struct {
+	CurrentStatus *string `json:"current_status"`
+}
+
+type AdminUpdateDelinquencyRequest struct {
+	CurrentStatus *string `json:"current_status"`
+}
+
 type DelinquencyHandler struct {
 	queries db.Querier
 	logger  *slog.Logger
@@ -167,4 +182,86 @@ func (h *DelinquencyHandler) HandleGetByID(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, delinquency)
+}
+
+// HandleUpdate handles PATCH /api/outstanding/{id} with role-based logic.
+func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	userRole := c.Request().Header.Get("X-User-Role")
+	if userRole == "" {
+		userRole = "user" // Default to least privileged
+	}
+
+	existing, err := h.queries.GetDelinquencyForUpdate(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return echo.NewHTTPError(http.StatusNotFound, "Delinquency not found")
+		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve delinquency for update")
+	}
+
+	var updatedDelinquency db.Nonipac
+	var updateErr error
+
+	switch userRole {
+	case "admin":
+		var req AdminUpdateDelinquencyRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+
+		params := db.AdminUpdateDelinquencyParams{
+			ID:            id,
+			CurrentStatus: existing.CurrentStatus,
+		}
+		if req.CurrentStatus != nil {
+			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+		}
+		updatedDelinquency, updateErr = h.queries.AdminUpdateDelinquency(ctx, params)
+
+	case "pfs":
+		var req PFSUpdateDelinquencyRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+
+		params := db.PFSUpdateDelinquencyParams{
+			ID:            id,
+			CurrentStatus: existing.CurrentStatus,
+		}
+		if req.CurrentStatus != nil {
+			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+		}
+		updatedDelinquency, updateErr = h.queries.PFSUpdateDelinquency(ctx, params)
+
+	case "user":
+		fallthrough
+	default:
+		var req UserUpdateDelinquencyRequest
+		if err := c.Bind(&req); err != nil {
+			return err
+		}
+
+		params := db.UserUpdateDelinquencyParams{ // Note: Typo 'Delinquncy' comes from your SQL query name
+			ID:            id,
+			CurrentStatus: existing.CurrentStatus,
+		}
+		if req.CurrentStatus != nil {
+			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+		}
+		updatedDelinquency, updateErr = h.queries.UserUpdateDelinquency(ctx, params)
+	}
+
+	if updateErr != nil {
+		h.logger.ErrorContext(ctx, "Failed to update delinquency", "error", updateErr, "id", id, "role", userRole)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update delinquency")
+	}
+
+	return c.JSON(http.StatusOK, updatedDelinquency)
 }
