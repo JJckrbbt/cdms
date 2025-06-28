@@ -1,2 +1,22 @@
+# --- General ---
+# Environment variables
 .env
+.env*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Frontend (Vite) ---
+# Dependencies
+/frontend/node_modules
+
+# Build output
+/frontend/dist
+
+# IDE and Editor directories
+/frontend/.vscode
+.idea
 
