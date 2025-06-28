@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Home, LineChart, Settings } from "lucide-react";
-import AppLogo from "@/assets/CDMSPro.png";
+import AppLogo from "@/assets/CDMSTransparent.png";
 
 export function Sidebar() {
   return (
