@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Bell, Home, LineChart, Settings } from "lucide-react";
 import AppLogo from "@/assets/CDMSTransparent.png";
+import { Link } from "react-router-dom";
 
 export function Sidebar() {
   return (
@@ -13,18 +14,24 @@ export function Sidebar() {
 
       {/* Main Navigation */}
       <nav className="flex flex-col gap-2">
-        <Button variant="ghost" className="justify-start gap-2">
-          <Home className="h-4 w-4" />
-          Dashboard
-        </Button>
-        <Button variant="ghost" className="justify-start gap-2">
-          <LineChart className="h-4 w-4" />
-          Chargebacks
-        </Button>
-        <Button variant="ghost" className="justify-start gap-2">
-          <Bell className="h-4 w-4" />
-          Delinquencies
-        </Button>
+        <Link to="/" className="w-full">
+          <Button variant="ghost" className="justify-start gap-2 w-full">
+            <Home className="h-4 w-4" />
+            Dashboard
+          </Button>
+        </Link>
+        <Link to="/chargebacks" className="w-full">
+          <Button variant="ghost" className="justify-start gap-2 w-full">
+            <LineChart className="h-4 w-4" />
+            Chargebacks
+          </Button>
+        </Link>
+        <Link to="/delinquencies" className="w-full">
+          <Button variant="ghost" className="justify-start gap-2 w-full">
+            <Bell className="h-4 w-4" />
+            Delinquencies
+          </Button>
+        </Link>
       </nav>
 
       {/* Spacer to push admin link to the bottom */}

@@ -1,45 +1,25 @@
-import { useState, useEffect } from "react";
 import { DashboardLayout } from "./components/DashboardLayout";
-import { DataTable } from "./components/ui/DataTable";
-import { Chargeback, columns } from "./components/chargebacks/columns";
+import { Toaster } from "react-hot-toast";
+import { Routes, Route } from "react-router-dom";
+import { ChargebacksPage } from "./pages/ChargebacksPage";
+import { DelinquenciesPage } from "./pages/DelinquenciesPage";
+import { DashboardPage } from "./pages/DashboardPage";
 
 function App() {
-  const [chargebacks, setChargebacks] = useState<Chargeback[]>([]);
-
-  useEffect(() => {
-    async function fetchChargebacks() {
-      try {
-        const response = await fetch("http://10.98.1.142:8080/api/chargebacks");
-        const responseData = await response.json();
-        
-        // --- THIS IS THE FIX ---
-        // We now correctly access the 'data' array inside the response object.
-        if (responseData && Array.isArray(responseData.data)) {
-          setChargebacks(responseData.data);
-        } else {
-          console.error("API response did not contain a 'data' array:", responseData);
-          setChargebacks([]); // Default to an empty array if the structure is wrong
-        }
-
-      } catch (error) {
-        console.error("Failed to fetch chargebacks:", error);
-      }
-    }
-
-    fetchChargebacks();
-  }, []);
+  const handleUploadSuccess = () => {
+    // This function is called when an upload is successful.
+    // The UploadReportModal handles closing itself and showing toasts.
+    // Specific pages (like ChargebacksPage) will be responsible for refreshing their own data.
+  };
 
   return (
-    <DashboardLayout>
-      <div className="space-y-4">
-        <h1 className="text-3xl font-bold">Chargebacks</h1>
-        <p className="text-sm text-muted-foreground">
-          A list of recent chargebacks from the live API.
-        </p>
-        
-        <DataTable columns={columns} data={chargebacks} />
-
-      </div>
+    <DashboardLayout onUploadSuccess={handleUploadSuccess}>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/chargebacks" element={<ChargebacksPage />} />
+        <Route path="/delinquencies" element={<DelinquenciesPage />} />
+      </Routes>
+      <Toaster />
     </DashboardLayout>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,19 +10,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Upload, Search, PanelLeft } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Upload, PanelLeft } from "lucide-react";
+import { UploadReportModal } from "./UploadReportModal";
 
-export function DashboardLayout({ children }: { children: React.ReactNode }) {
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+  onUploadSuccess: () => void;
+}
+
+export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutProps) {
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
   return (
-    <div className="grid h-screen w-full md:grid-cols-[280px_1fr]">
+    <div className="h-screen flex">
       {/* Persistent Sidebar for Desktop */}
-      <div className="hidden border-r bg-muted/40 md:block">
+      <div className="hidden md:block fixed top-0 left-0 h-full w-[280px] border-r bg-muted/40">
         <Sidebar />
       </div>
 
-      <div className="flex flex-col">
-        <header className="flex h-16 items-center justify-between border-b bg-background px-6">
+      <div className="flex flex-col flex-1 md:ml-[280px]">
+        <header className="flex h-16 items-center justify-between border-b bg-background px-6 sticky top-0 z-10">
           {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild>
@@ -39,10 +46,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           
           {/* Header Actions */}
           <div className="flex w-full items-center gap-4 justify-end">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Upload Report
-            </Button>
+            <Sheet open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Upload className="h-4 w-4" />
+                  Upload Report
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Upload Report</SheetTitle>
+                  <SheetDescription>
+                    Select a report type and upload your file.
+                  </SheetDescription>
+                </SheetHeader>
+                <UploadReportModal onClose={() => setIsUploadModalOpen(false)} onUploadSuccess={onUploadSuccess} />
+              </SheetContent>
+            </Sheet>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -68,8 +88,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="p-6 h-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>
