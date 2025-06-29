@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Upload, PanelLeft } from "lucide-react";
+import { Upload, PanelLeft, Sun, Moon } from "lucide-react";
 import { UploadReportModal } from "./UploadReportModal";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "../hooks/useTheme";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,6 +23,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="h-screen flex">
@@ -63,6 +66,13 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                 <UploadReportModal onClose={() => setIsUploadModalOpen(false)} onUploadSuccess={onUploadSuccess} />
               </SheetContent>
             </Sheet>
+            <div className="flex items-center space-x-2">
+              {theme === "light" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              <Switch
+                checked={theme === "dark"}
+                onCheckedChange={toggleTheme}
+              />
+            </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
