@@ -139,7 +139,7 @@ func (h *ChargebackHandler) HandleCreate(c echo.Context) error {
 		ClassID:           pgtype.Text{String: derefString(req.ClassID), Valid: req.ClassID != nil},
 		AssignedRebillDrn: pgtype.Text{String: derefString(req.AssignedRebillDRN), Valid: req.AssignedRebillDRN != nil},
 		ArticlesServices:  pgtype.Text{String: derefString(req.ArticlesServices), Valid: req.ArticlesServices != nil},
-		CurrentStatus:     db.ChargebackStatus(derefStringWithDefault(req.CurrentStatus, "Open")),
+		CurrentStatus:     db.CdmsStatus(derefStringWithDefault(req.CurrentStatus, "Open")),
 		ReasonCode:        db.NullChargebackReasonCode{ChargebackReasonCode: db.ChargebackReasonCode(derefString(req.ReasonCode)), Valid: req.ReasonCode != nil},
 		Action:            db.NullChargebackAction{ChargebackAction: db.ChargebackAction(derefString(req.Action)), Valid: req.Action != nil},
 	}

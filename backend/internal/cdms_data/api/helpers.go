@@ -42,7 +42,7 @@ func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Charge
 	}
 	// Merge updates from request
 	if req.CurrentStatus != nil {
-		params.CurrentStatus = db.ChargebackStatus(*req.CurrentStatus)
+		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
 	if req.ReasonCode != nil {
 		params.ReasonCode = db.NullChargebackReasonCode{ChargebackReasonCode: db.ChargebackReasonCode(*req.ReasonCode), Valid: true}
@@ -82,7 +82,7 @@ func buildPFSUpdateParams(req *PFSUpdateChargebackRequest, existing *db.Chargeba
 	}
 	// Merge updates
 	if req.CurrentStatus != nil {
-		params.CurrentStatus = db.ChargebackStatus(*req.CurrentStatus)
+		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
 	if req.PassedToPSF != nil {
 		params.PassedToPsf = parseDateToPG(*req.PassedToPSF)
@@ -113,7 +113,7 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 	}
 	// Merge updates
 	if req.CurrentStatus != nil {
-		params.CurrentStatus = db.ChargebackStatus(*req.CurrentStatus)
+		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
 	if req.ReasonCode != nil {
 		params.ReasonCode = db.NullChargebackReasonCode{ChargebackReasonCode: db.ChargebackReasonCode(*req.ReasonCode), Valid: true}

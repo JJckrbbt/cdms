@@ -34,7 +34,7 @@ BEGIN
 
     -- Insert the new status into the history table.
     INSERT INTO "status_history" (status, notes, user_id, status_date)
-    VALUES (NEW.current_status::text, 'Status ' || NEW.current_status || ' logged via trigger for ' || TG_TABLE_NAME, current_user_id, NOW())
+    VALUES (NEW.current_status, 'Status ' || NEW.current_status || ' logged via trigger for ' || TG_TABLE_NAME, current_user_id, NOW())
     RETURNING id INTO last_status_history_id;
 
     -- Link the new history record.

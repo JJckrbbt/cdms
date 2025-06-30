@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 const getActiveChargebackByBusinessKey = `-- name: GetActiveChargebackByBusinessKey :one
@@ -405,11 +406,11 @@ type ListActiveChargebacksRow struct {
 	AgencyID               string                   `json:"agency_id"`
 	BureauCode             string                   `json:"bureau_code"`
 	DaysOld                interface{}              `json:"days_old"`
-	AbsAmount              int64                    `json:"abs_amount"`
+	AbsAmount              decimal.Decimal          `json:"abs_amount"`
 	AgingCategory          string                   `json:"aging_category"`
-	DaysOpenToPfs          int32                    `json:"days_open_to_pfs"`
-	DaysPfsToComplete      int32                    `json:"days_pfs_to_complete"`
-	DaysComplete           int32                    `json:"days_complete"`
+	DaysOpenToPfs          pgtype.Int4              `json:"days_open_to_pfs"`
+	DaysPfsToComplete      pgtype.Int4              `json:"days_pfs_to_complete"`
+	DaysComplete           pgtype.Int4              `json:"days_complete"`
 	TotalCount             int64                    `json:"total_count"`
 }
 
@@ -530,7 +531,7 @@ type ListActiveDelinquenciesRow struct {
 	BureauCode                  string                 `json:"bureau_code"`
 	DaysOld                     interface{}            `json:"days_old"`
 	AgingCategory               string                 `json:"aging_category"`
-	AbsAmount                   int64                  `json:"abs_amount"`
+	AbsAmount                   decimal.Decimal        `json:"abs_amount"`
 	TotalCount                  int64                  `json:"total_count"`
 }
 

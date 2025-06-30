@@ -111,7 +111,7 @@ func (h *DelinquencyHandler) HandleCreate(c echo.Context) error {
 		CollectionDueDate:           pgtype.Date{Time: collectionDueDate, Valid: true},
 		OpenDate:                    pgtype.Date{Time: openDate, Valid: true},
 		Title:                       pgtype.Text{String: derefString(req.Title), Valid: req.Title != nil},
-		CurrentStatus:               db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(derefStringWithDefault(req.CurrentStatus, "Open")), Valid: true},
+		CurrentStatus:               db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(derefStringWithDefault(req.CurrentStatus, "Open")), Valid: true},
 	}
 
 	delinquency, err := h.queries.CreateDelinquency(c.Request().Context(), params)
@@ -234,7 +234,7 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
 		}
 		updatedDelinquency, updateErr = h.queries.AdminUpdateDelinquency(ctx, params)
 
@@ -249,7 +249,7 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
 		}
 		updatedDelinquency, updateErr = h.queries.PFSUpdateDelinquency(ctx, params)
 
@@ -266,7 +266,7 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullNonipacStatus{NonipacStatus: db.NonipacStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
 		}
 		updatedDelinquency, updateErr = h.queries.UserUpdateDelinquency(ctx, params)
 	}

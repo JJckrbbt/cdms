@@ -51,6 +51,12 @@ type Chargeback struct {
 	IssueInResearchDate *time.Time                `json:"issue_in_research_date"`
 	ReasonCode          *ChargebackReasonCode     `json:"reason_code"`
 	Action              *ChargebackAction         `json:"action"`
+	DaysOld             time.Time                 `json:"days_old"`
+	AbsAmount           decimal.Decimal           `json:"abs_amount"`
+	AgingCategory       string                    `json:"aging_category"`
+	DaysOpenToPFS       int16                     `json:"days_open_to_pfs"`
+	DaysPFSToComplete   int16                     `json:"days_pfs_to_complete"`
+	DaysComplete        int16                     `json:"days_complete"`
 	CreatedAt           time.Time                 `json:"created_at"`
 	UpdatedAt           time.Time                 `json:"updated_at"`
 	IsActive            bool                      `json:"is_active"`
@@ -85,6 +91,9 @@ type NonIpac struct {
 	PFSContacts                 int16                  `json:"pfs_contacts"`
 	OpenDate                    time.Time              `json:"open_date"`
 	ReconciledDate              *time.Time             `json:"reconciled_date"`
+	DaysOld                     time.Time              `json:"days_old"`
+	AgingCategory               string                 `json:"aging_category"`
+	AbsAmount                   decimal.Decimal        `json:"abs_amount"`
 	CreatedAt                   time.Time              `json:"created_at"`
 	UpdatedAt                   time.Time              `json:"updated_at"`
 	IsActive                    bool                   `json:"is_active"`
