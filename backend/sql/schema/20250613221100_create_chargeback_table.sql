@@ -27,7 +27,7 @@ CREATE TABLE "chargeback" (
     "bd_doc_num" VARCHAR(20) NOT NULL,
     "vendor" VARCHAR(8) NOT NULL,
     "articles_services" TEXT,
-    "current_status" chargeback_status NOT NULL DEFAULT 'New',
+    "current_status" cdms_status NOT NULL DEFAULT 'New',
     "issue_in_research_date" DATE,
     "reason_code" chargeback_reason_code,
     "action" chargeback_action,

@@ -32,7 +32,7 @@ RETURNING id, reporting_source, fund, business_line, region, location_system, pr
 
 type AdminUpdateChargebackParams struct {
 	ID                     int64                    `json:"id"`
-	CurrentStatus          ChargebackStatus         `json:"current_status"`
+	CurrentStatus          CdmsStatus               `json:"current_status"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
 	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
@@ -117,8 +117,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type AdminUpdateDelinquencyParams struct {
-	ID            int64             `json:"id"`
-	CurrentStatus NullNonipacStatus `json:"current_status"`
+	ID            int64          `json:"id"`
+	CurrentStatus NullCdmsStatus `json:"current_status"`
 }
 
 // Updates the admin-modifiable fields of a specific delinquency record
@@ -174,11 +174,11 @@ RETURNING id, reporting_source, fund, business_line, region, location_system, pr
 `
 
 type PFSUpdateChargebackParams struct {
-	ID                 int64            `json:"id"`
-	CurrentStatus      ChargebackStatus `json:"current_status"`
-	PassedToPsf        pgtype.Date      `json:"passed_to_psf"`
-	NewIpacDocumentRef pgtype.Text      `json:"new_ipac_document_ref"`
-	PfsCompletionDate  pgtype.Date      `json:"pfs_completion_date"`
+	ID                 int64       `json:"id"`
+	CurrentStatus      CdmsStatus  `json:"current_status"`
+	PassedToPsf        pgtype.Date `json:"passed_to_psf"`
+	NewIpacDocumentRef pgtype.Text `json:"new_ipac_document_ref"`
+	PfsCompletionDate  pgtype.Date `json:"pfs_completion_date"`
 }
 
 // Updates the user-modifiable fields of a specific chargeback record
@@ -248,8 +248,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type PFSUpdateDelinquencyParams struct {
-	ID            int64             `json:"id"`
-	CurrentStatus NullNonipacStatus `json:"current_status"`
+	ID            int64          `json:"id"`
+	CurrentStatus NullCdmsStatus `json:"current_status"`
 }
 
 // Updates the user-modifiable fields of a specific delinquency record
@@ -311,7 +311,7 @@ RETURNING id, reporting_source, fund, business_line, region, location_system, pr
 
 type UserUpdateChargebackParams struct {
 	ID                     int64                    `json:"id"`
-	CurrentStatus          ChargebackStatus         `json:"current_status"`
+	CurrentStatus          CdmsStatus               `json:"current_status"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
 	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
@@ -394,8 +394,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type UserUpdateDelinquencyParams struct {
-	ID            int64             `json:"id"`
-	CurrentStatus NullNonipacStatus `json:"current_status"`
+	ID            int64          `json:"id"`
+	CurrentStatus NullCdmsStatus `json:"current_status"`
 }
 
 // Updates the user-modifiable fields of a specific delinquency record

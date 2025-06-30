@@ -72,7 +72,7 @@ type CreateChargebackParams struct {
 	ClassID           pgtype.Text              `json:"class_id"`
 	AssignedRebillDrn pgtype.Text              `json:"assigned_rebill_drn"`
 	ArticlesServices  pgtype.Text              `json:"articles_services"`
-	CurrentStatus     ChargebackStatus         `json:"current_status"`
+	CurrentStatus     CdmsStatus               `json:"current_status"`
 	ReasonCode        NullChargebackReasonCode `json:"reason_code"`
 	Action            NullChargebackAction     `json:"action"`
 }
@@ -206,7 +206,7 @@ type CreateDelinquencyParams struct {
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
 	OpenDate                    pgtype.Date            `json:"open_date"`
 	Title                       pgtype.Text            `json:"title"`
-	CurrentStatus               NullNonipacStatus      `json:"current_status"`
+	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 }
 
 // Inserts a new delinquency (nonipac) record, from a manual UI entry.

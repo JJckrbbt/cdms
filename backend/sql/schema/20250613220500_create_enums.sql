@@ -1,13 +1,7 @@
 -- +goose Up
 -- Create all custom ENUM types used in the schema
 
-CREATE TYPE chargeback_reporting_source AS ENUM (
-  'BC1048',
-  'BC1300',
-  'ApplicationCreated'
-);
-
-CREATE TYPE chargeback_status AS ENUM (
+CREATE TYPE cdms_status AS ENUM (
   'Open',
   'Hold Pending External Action',
   'Hold Pending Internal Action',
@@ -15,8 +9,29 @@ CREATE TYPE chargeback_status AS ENUM (
   'Passed to PFS',
   'Completed by PFS',
   'PFS Return to GSA',
-  'New'
+  'New',
+  'Refund',
+  'Offset',
+  'In Process',
+  'Write Off',
+  'Referred to Treasury for Collections',
+  'Return Credit to Treasury',
+  'Waiting on Customer Response',
+  'Waiting on GSA Response Pending Payment',
+  'Closed - Payment Received',
+  'Reverse to Income',
+  'Bill as IPAC',
+  'Bill as DoD',
+  'EIS Issues'
 );
+
+CREATE TYPE chargeback_reporting_source AS ENUM (
+  'BC1048',
+  'BC1300',
+  'ApplicationCreated'
+);
+
+
 
 CREATE TYPE chargeback_reason_code AS ENUM (
   'Incorrect ALC',
@@ -81,23 +96,6 @@ CREATE TYPE nonipac_reporting_source AS ENUM (
   'OUTSTANDING_BILLS'
 );
 
-CREATE TYPE nonipac_status AS ENUM (
-  'Open',
-  'Refund',
-  'Offset',
-  'In Process',
-  'Write Off',
-  'Referred to Treasury for Collections',
-  'Return Credit to Treasury',
-  'Waiting on Customer Response',
-  'Waiting on GSA Response Pending Payment',
-  'Closed - Payment Received',
-  'Reverse to Income',
-  'Bill as IPAC',
-  'Bill as DoD',
-  'EIS Issues'
-);
-
 CREATE TYPE status_history_status AS ENUM (
   'Open',
   'Hold Pending External Action',
@@ -131,11 +129,10 @@ CREATE TYPE user_org AS ENUM (
 
 DROP TYPE IF EXISTS user_org;
 DROP TYPE IF EXISTS status_history_status;
-DROP TYPE IF EXISTS nonipac_status;
 DROP TYPE IF EXISTS nonipac_reporting_source;
 DROP TYPE IF EXISTS chargeback_fund;
 DROP TYPE IF EXISTS chargeback_business_line;
 DROP TYPE IF EXISTS chargeback_action;
 DROP TYPE IF EXISTS chargeback_reason_code;
-DROP TYPE IF EXISTS chargeback_status;
 DROP TYPE IF EXISTS chargeback_reporting_source;
+DROP TYPE IF EXISTS cdms_status;

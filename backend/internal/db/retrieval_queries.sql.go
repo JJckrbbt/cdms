@@ -387,7 +387,7 @@ type ListActiveChargebacksRow struct {
 	BdDocNum               string                   `json:"bd_doc_num"`
 	Vendor                 string                   `json:"vendor"`
 	ArticlesServices       pgtype.Text              `json:"articles_services"`
-	CurrentStatus          ChargebackStatus         `json:"current_status"`
+	CurrentStatus          CdmsStatus               `json:"current_status"`
 	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
@@ -514,7 +514,7 @@ type ListActiveDelinquenciesRow struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               NullNonipacStatus      `json:"current_status"`
+	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`

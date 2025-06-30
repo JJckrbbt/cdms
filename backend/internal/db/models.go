@@ -11,6 +11,67 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type CdmsStatus string
+
+const (
+	CdmsStatusOpen                               CdmsStatus = "Open"
+	CdmsStatusHoldPendingExternalAction          CdmsStatus = "Hold Pending External Action"
+	CdmsStatusHoldPendingInternalAction          CdmsStatus = "Hold Pending Internal Action"
+	CdmsStatusInResearch                         CdmsStatus = "In Research"
+	CdmsStatusPassedtoPFS                        CdmsStatus = "Passed to PFS"
+	CdmsStatusCompletedbyPFS                     CdmsStatus = "Completed by PFS"
+	CdmsStatusPFSReturntoGSA                     CdmsStatus = "PFS Return to GSA"
+	CdmsStatusNew                                CdmsStatus = "New"
+	CdmsStatusRefund                             CdmsStatus = "Refund"
+	CdmsStatusOffset                             CdmsStatus = "Offset"
+	CdmsStatusInProcess                          CdmsStatus = "In Process"
+	CdmsStatusWriteOff                           CdmsStatus = "Write Off"
+	CdmsStatusReferredtoTreasuryforCollections   CdmsStatus = "Referred to Treasury for Collections"
+	CdmsStatusReturnCredittoTreasury             CdmsStatus = "Return Credit to Treasury"
+	CdmsStatusWaitingonCustomerResponse          CdmsStatus = "Waiting on Customer Response"
+	CdmsStatusWaitingonGSAResponsePendingPayment CdmsStatus = "Waiting on GSA Response Pending Payment"
+	CdmsStatusClosedPaymentReceived              CdmsStatus = "Closed - Payment Received"
+	CdmsStatusReversetoIncome                    CdmsStatus = "Reverse to Income"
+	CdmsStatusBillasIPAC                         CdmsStatus = "Bill as IPAC"
+	CdmsStatusBillasDoD                          CdmsStatus = "Bill as DoD"
+	CdmsStatusEISIssues                          CdmsStatus = "EIS Issues"
+)
+
+func (e *CdmsStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CdmsStatus(s)
+	case string:
+		*e = CdmsStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CdmsStatus: %T", src)
+	}
+	return nil
+}
+
+type NullCdmsStatus struct {
+	CdmsStatus CdmsStatus `json:"cdms_status"`
+	Valid      bool       `json:"valid"` // Valid is true if CdmsStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCdmsStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.CdmsStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CdmsStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCdmsStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CdmsStatus), nil
+}
+
 type ChargebackAction string
 
 const (
@@ -260,54 +321,6 @@ func (ns NullChargebackReportingSource) Value() (driver.Value, error) {
 	return string(ns.ChargebackReportingSource), nil
 }
 
-type ChargebackStatus string
-
-const (
-	ChargebackStatusOpen                      ChargebackStatus = "Open"
-	ChargebackStatusHoldPendingExternalAction ChargebackStatus = "Hold Pending External Action"
-	ChargebackStatusHoldPendingInternalAction ChargebackStatus = "Hold Pending Internal Action"
-	ChargebackStatusInResearch                ChargebackStatus = "In Research"
-	ChargebackStatusPassedtoPFS               ChargebackStatus = "Passed to PFS"
-	ChargebackStatusCompletedbyPFS            ChargebackStatus = "Completed by PFS"
-	ChargebackStatusPFSReturntoGSA            ChargebackStatus = "PFS Return to GSA"
-	ChargebackStatusNew                       ChargebackStatus = "New"
-)
-
-func (e *ChargebackStatus) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = ChargebackStatus(s)
-	case string:
-		*e = ChargebackStatus(s)
-	default:
-		return fmt.Errorf("unsupported scan type for ChargebackStatus: %T", src)
-	}
-	return nil
-}
-
-type NullChargebackStatus struct {
-	ChargebackStatus ChargebackStatus `json:"chargeback_status"`
-	Valid            bool             `json:"valid"` // Valid is true if ChargebackStatus is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullChargebackStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.ChargebackStatus, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.ChargebackStatus.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullChargebackStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.ChargebackStatus), nil
-}
-
 type NonipacReportingSource string
 
 const (
@@ -348,60 +361,6 @@ func (ns NullNonipacReportingSource) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.NonipacReportingSource), nil
-}
-
-type NonipacStatus string
-
-const (
-	NonipacStatusOpen                               NonipacStatus = "Open"
-	NonipacStatusRefund                             NonipacStatus = "Refund"
-	NonipacStatusOffset                             NonipacStatus = "Offset"
-	NonipacStatusInProcess                          NonipacStatus = "In Process"
-	NonipacStatusWriteOff                           NonipacStatus = "Write Off"
-	NonipacStatusReferredtoTreasuryforCollections   NonipacStatus = "Referred to Treasury for Collections"
-	NonipacStatusReturnCredittoTreasury             NonipacStatus = "Return Credit to Treasury"
-	NonipacStatusWaitingonCustomerResponse          NonipacStatus = "Waiting on Customer Response"
-	NonipacStatusWaitingonGSAResponsePendingPayment NonipacStatus = "Waiting on GSA Response Pending Payment"
-	NonipacStatusClosedPaymentReceived              NonipacStatus = "Closed - Payment Received"
-	NonipacStatusReversetoIncome                    NonipacStatus = "Reverse to Income"
-	NonipacStatusBillasIPAC                         NonipacStatus = "Bill as IPAC"
-	NonipacStatusBillasDoD                          NonipacStatus = "Bill as DoD"
-	NonipacStatusEISIssues                          NonipacStatus = "EIS Issues"
-)
-
-func (e *NonipacStatus) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = NonipacStatus(s)
-	case string:
-		*e = NonipacStatus(s)
-	default:
-		return fmt.Errorf("unsupported scan type for NonipacStatus: %T", src)
-	}
-	return nil
-}
-
-type NullNonipacStatus struct {
-	NonipacStatus NonipacStatus `json:"nonipac_status"`
-	Valid         bool          `json:"valid"` // Valid is true if NonipacStatus is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullNonipacStatus) Scan(value interface{}) error {
-	if value == nil {
-		ns.NonipacStatus, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.NonipacStatus.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullNonipacStatus) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.NonipacStatus), nil
 }
 
 type StatusHistoryStatus string
@@ -530,7 +489,7 @@ type ActiveChargebacksWithVendorInfo struct {
 	BdDocNum               string                   `json:"bd_doc_num"`
 	Vendor                 string                   `json:"vendor"`
 	ArticlesServices       pgtype.Text              `json:"articles_services"`
-	CurrentStatus          ChargebackStatus         `json:"current_status"`
+	CurrentStatus          CdmsStatus               `json:"current_status"`
 	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
@@ -572,7 +531,7 @@ type ActiveNonipacWithVendorInfo struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               NullNonipacStatus      `json:"current_status"`
+	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
@@ -655,7 +614,7 @@ type Chargeback struct {
 	BdDocNum               string                    `json:"bd_doc_num"`
 	Vendor                 string                    `json:"vendor"`
 	ArticlesServices       pgtype.Text               `json:"articles_services"`
-	CurrentStatus          ChargebackStatus          `json:"current_status"`
+	CurrentStatus          CdmsStatus                `json:"current_status"`
 	IssueInResearchDate    pgtype.Date               `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
 	Action                 NullChargebackAction      `json:"action"`
@@ -753,7 +712,7 @@ type Nonipac struct {
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
-	CurrentStatus               NullNonipacStatus      `json:"current_status"`
+	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`
@@ -780,11 +739,11 @@ type RemovedRowsLog struct {
 }
 
 type StatusHistory struct {
-	ID         int64               `json:"id"`
-	Status     StatusHistoryStatus `json:"status"`
-	StatusDate pgtype.Timestamptz  `json:"status_date"`
-	Notes      pgtype.Text         `json:"notes"`
-	UserID     int64               `json:"user_id"`
+	ID         int64              `json:"id"`
+	Status     CdmsStatus         `json:"status"`
+	StatusDate pgtype.Timestamptz `json:"status_date"`
+	Notes      pgtype.Text        `json:"notes"`
+	UserID     int64              `json:"user_id"`
 }
 
 type TempAgencyBureauStaging struct {
@@ -821,7 +780,7 @@ type TempChargebackStaging struct {
 	BdDocNum               string                    `json:"bd_doc_num"`
 	Vendor                 string                    `json:"vendor"`
 	ArticlesServices       pgtype.Text               `json:"articles_services"`
-	CurrentStatus          ChargebackStatus          `json:"current_status"`
+	CurrentStatus          CdmsStatus                `json:"current_status"`
 	IssueInResearchDate    pgtype.Date               `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
 	Action                 NullChargebackAction      `json:"action"`
@@ -860,7 +819,7 @@ type TempNonipacStaging struct {
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
-	CurrentStatus               NullNonipacStatus      `json:"current_status"`
+	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`

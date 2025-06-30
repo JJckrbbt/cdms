@@ -106,7 +106,7 @@ func main() {
 	e.Use(middleware.Recover())
 	// CORS middleware: Essential for React frontend.
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://10.98.1.118"}, // Replace with your React dev server URL
+		AllowOrigins: []string{"http://localhost:5173"}, // Replace with your React dev server URL
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Accept", "Authorization"},
 		// Add AllowCredentials: true if you send cookies/credentials

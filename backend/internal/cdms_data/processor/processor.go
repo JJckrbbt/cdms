@@ -266,7 +266,8 @@ func (p *Processor) executeMergeTransaction(ctx context.Context, uploadID string
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, "SET LOCAL app.user_id = $1", p.systemUserID)
+	setQuery := fmt.Sprintf("SET LOCAL app.user_id = %d", p.systemUserID)
+	_, err = tx.Exec(ctx, setQuery)
 	if err != nil {
 		return 0, fmt.Errorf("failed to set user for transaction: %w", err)
 	}
