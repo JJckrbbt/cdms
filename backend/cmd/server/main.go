@@ -18,6 +18,8 @@ import (
 	"github.com/jjckrbbt/cdms/backend/internal/db"
 	"github.com/jjckrbbt/cdms/backend/internal/logger"
 
+	"github.com/getsentry/sentry-go"
+	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"            // NEW: Echo framework
 	"github.com/labstack/echo/v4/middleware" // NEW: Echo middleware
@@ -31,13 +33,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 2. Initialize the Logger.
+	// 2. Initialize Sentry and then Sentry's handler
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:              cfg.SentryDSN,
+		Environment:      cfg.AppEnv,
+		TracesSampleRate: 1.0,
+		Debug:            true,
+	}); err != nil {
+		fmt.Printf("Sentry initialization failed: %v\n", err)
+	}
+	defer sentry.Flush(2 * time.Second)
+
+	// 3. Initialize the Logger.
 	logger.InitLogger(cfg.AppEnv)
 	appLogger := logger.L() // Get the configured logger instance
 
 	appLogger.Info("Application starting up...", "environment", cfg.AppEnv)
 
-	// 3. Connect to the Database.
+	// 4. Connect to the Database.
 	dbClient, err := database.ConnectDB(cfg.DatabaseURL, appLogger.With("component", "database_connector"))
 	if err != nil {
 		appLogger.Error("Failed to connect to database at startup", slog.Any("error", err))
@@ -50,7 +63,7 @@ func main() {
 	}()
 	appLogger.Info("Database connection established.")
 
-	// 4. Initialize Core Application Components.
+	// 5. Initialize Core Application Components.
 	realQuerier := db.New(dbClient.Pool)
 
 	importerLogger := appLogger.With("service", "file_importer")
@@ -78,7 +91,7 @@ func main() {
 
 	appLogger.Info("API handlers initialized.")
 
-	// 5. Initialize Echo.
+	// 6. Initialize Echo.
 	e := echo.New()
 
 	// Configure Echo's logger to use our slog instance.
@@ -88,12 +101,12 @@ func main() {
 	e.Logger.SetLevel(0)   // Set to 0 to disable logging, we use slog
 	e.Logger.SetHeader("") // Remove default header, slog adds better ones
 
-	// 6. Register Middleware.
+	// 7. Register Middleware.
 	// Recover middleware: Recovers from panics anywhere in the chain and handles the error.
 	e.Use(middleware.Recover())
 	// CORS middleware: Essential for React frontend.
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://localhost:3000"}, // Replace with your React dev server URL
+		AllowOrigins: []string{"http://10.98.1.118"}, // Replace with your React dev server URL
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Accept", "Authorization"},
 		// Add AllowCredentials: true if you send cookies/credentials
@@ -107,6 +120,11 @@ func main() {
 			c.Set("requestID", reqID)    // Store request ID in context for later access
 
 			start := time.Now()
+
+			if hub := sentryecho.GetHubFromContext(c); hub != nil {
+				hub.Scope().SetTag("request_id", c.Get("requestID").(string))
+			}
+
 			err := next(c)
 			stop := time.Now()
 
@@ -131,7 +149,11 @@ func main() {
 		}
 	})
 
-	// 7. Register Routes.
+	e.Use(sentryecho.New(sentryecho.Options{
+		Repanic: true,
+	}))
+
+	// 8. Register Routes.
 
 	// Health check endpoint (simple GET)
 	e.GET("/health", func(c echo.Context) error {
@@ -141,6 +163,9 @@ func main() {
 
 		if err := dbClient.Ping(); err != nil {
 			reqLogger.ErrorContext(c.Request().Context(), "Database ping failed during health check", slog.Any("error", err))
+
+			sentry.CaptureException(err)
+
 			return c.String(http.StatusInternalServerError, "DB Not Ready") // Return string response for error
 		}
 		return c.String(http.StatusOK, "OK") // Return string response for success
@@ -149,7 +174,7 @@ func main() {
 	// Unified API upload endpoint using Echo's path parameters
 	// ":reportType" captures the value from the URL path.
 	//Upload group
-	e.POST("/api/chargebacks/upload/:reportType", uploadHandler.HandleUpload)
+	e.POST("/api/upload/:reportType", uploadHandler.HandleUpload)
 
 	//Chargeback group
 	chargebackRoutes := e.Group("/api/chargebacks")
@@ -165,7 +190,13 @@ func main() {
 	delinquencyRoutes.POST("", delinquencyHandler.HandleCreate)
 	delinquencyRoutes.PATCH("/:id", delinquencyHandler.HandleUpdate)
 
-	// 8. Start the HTTP server.
+	e.GET("/foo", func(ctx echo.Context) error {
+		// sentryecho handler will catch it just fine. Also, because we attached "someRandomTag"
+		// in the middleware before, it will be sent through as well
+		panic("y tho")
+	})
+
+	// 9. Start the HTTP server.
 	port := ":8080"
 	appLogger.Info("HTTP Server starting on port", "port", port)
 	// e.Start blocks until the server is shut down or an error occurs.

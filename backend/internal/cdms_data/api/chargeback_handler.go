@@ -81,6 +81,11 @@ type CreateChargebackRequest struct {
 	Action            *string         `json:"action"`
 }
 
+type PaginatedChargebacksResponse struct {
+	TotalCount int64                         `json:"total_count"`
+	Data       []db.ListActiveChargebacksRow `json:"data"`
+}
+
 type ChargebackHandler struct {
 	queries db.Querier
 	logger  *slog.Logger
@@ -204,8 +209,16 @@ func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 		h.logger.ErrorContext(ctx, "Failed to list active chargebacks", "error", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargebacks")
 	}
+	var totalCount int64
+	if len(chargebacks) > 0 {
+		totalCount = chargebacks[0].TotalCount
+	}
+	response := PaginatedChargebacksResponse{
+		TotalCount: totalCount,
+		Data:       chargebacks,
+	}
 
-	return c.JSON(http.StatusOK, chargebacks)
+	return c.JSON(http.StatusOK, response)
 }
 
 // HandleGetByID handles GET /api/chargebacks/{id}

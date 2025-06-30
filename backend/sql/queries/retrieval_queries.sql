@@ -2,7 +2,8 @@
 -- name: ListActiveChargebacks :many
 -- Fetches a paginated list from the active_chargebacks_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT * FROM active_chargebacks_with_vendor_info
+SELECT *, count(*) OVER() AS total_count
+FROM active_chargebacks_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
 OFFSET $2;
@@ -10,7 +11,8 @@ OFFSET $2;
 -- name: ListActiveDelinquencies :many
 -- Fetches a paginated list from the active_nonipac_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT * FROM active_nonipac_with_vendor_info
+SELECT *, count(*) OVER() AS total_count
+FROM active_nonipac_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
 OFFSET $2;
@@ -45,4 +47,6 @@ WHERE id = $1 LIMIT 1;
 SELECT * FROM nonipac
 WHERE id = $1 LIMIT 1;
 
+-- name: GetUserByEmail :one
+SELECT * FROM "user" WHERE email = $1;
 

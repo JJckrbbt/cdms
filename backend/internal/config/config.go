@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL   string
 	AppEnv        string
 	GCSBucketName string
+	SentryDSN     string `env:"SENTRY_DSN"`
 	// Add any other configuration variables here (e.g., API keys, service endpoints)
 }
 
@@ -37,9 +38,15 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("GCS_BUCKET_NAME environment variable not set")
 	}
 
+	SentryDSN := os.Getenv("SentryDSN")
+	if SentryDSN == "" {
+		return nil, fmt.Errorf("SentryDSN environment variable not set")
+	}
+
 	return &Config{
 		DatabaseURL:   dbURL,
 		AppEnv:        appEnv,
 		GCSBucketName: gcsBucketName,
+		SentryDSN:     SentryDSN,
 	}, nil
 }

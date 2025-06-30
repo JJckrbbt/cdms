@@ -41,6 +41,11 @@ func NewDelinquencyHandler(q db.Querier, logger *slog.Logger) *DelinquencyHandle
 	}
 }
 
+type PaginatedDelinquenciesReponse struct {
+	TotalCount int64                           `json:"total_count"`
+	Data       []db.ListActiveDelinquenciesRow `json:"data"`
+}
+
 // CreateDelinquencyRequest defines the JSON body for creating a delinquency.
 type CreateDelinquencyRequest struct {
 	BusinessLine                string          `json:"business_line"`
@@ -160,8 +165,16 @@ func (h *DelinquencyHandler) HandleGetDelinquencies(c echo.Context) error {
 		h.logger.ErrorContext(c.Request().Context(), "Failed to list active delinquencies", "error", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve delinquencies")
 	}
+	var totalCount int64
+	if len(delinquencies) > 0 {
+		totalCount = delinquencies[0].TotalCount
+	}
+	response := PaginatedDelinquenciesReponse{
+		TotalCount: totalCount,
+		Data:       delinquencies,
+	}
 
-	return c.JSON(http.StatusOK, delinquencies)
+	return c.JSON(http.StatusOK, response)
 }
 
 // NEW: Add the handler for getting a single delinquency by ID.

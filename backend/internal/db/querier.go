@@ -43,13 +43,14 @@ type Querier interface {
 	GetDelinquencyForUpdate(ctx context.Context, id int64) (Nonipac, error)
 	// Retrieve a detailed summary for a specific upload
 	GetUpload(ctx context.Context, id pgtype.UUID) (Upload, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
 	// //go:generate mockery --name Querier --output ./mocks --outpkg mocks
 	// Fetches a paginated list from the active_chargebacks_with_vendor_info view.
 	// The view is already filtered by is_active = true.
-	ListActiveChargebacks(ctx context.Context, arg ListActiveChargebacksParams) ([]ActiveChargebacksWithVendorInfo, error)
+	ListActiveChargebacks(ctx context.Context, arg ListActiveChargebacksParams) ([]ListActiveChargebacksRow, error)
 	// Fetches a paginated list from the active_nonipac_with_vendor_info view.
 	// The view is already filtered by is_active = true.
-	ListActiveDelinquencies(ctx context.Context, arg ListActiveDelinquenciesParams) ([]ActiveNonipacWithVendorInfo, error)
+	ListActiveDelinquencies(ctx context.Context, arg ListActiveDelinquenciesParams) ([]ListActiveDelinquenciesRow, error)
 	// Provides a paginated list of recent report uploads and their statuses
 	ListUploads(ctx context.Context, arg ListUploadsParams) ([]Upload, error)
 	// Updates the user-modifiable fields of a specific chargeback record

@@ -519,7 +519,6 @@ type ActiveChargebacksWithVendorInfo struct {
 	Title                  pgtype.Text              `json:"title"`
 	Alc                    string                   `json:"alc"`
 	CustomerTas            string                   `json:"customer_tas"`
-	TaskSubtask            string                   `json:"task_subtask"`
 	ClassID                pgtype.Text              `json:"class_id"`
 	CustomerName           string                   `json:"customer_name"`
 	OrgCode                string                   `json:"org_code"`
@@ -548,6 +547,12 @@ type ActiveChargebacksWithVendorInfo struct {
 	UpdatedAt              pgtype.Timestamptz       `json:"updated_at"`
 	AgencyID               string                   `json:"agency_id"`
 	BureauCode             string                   `json:"bureau_code"`
+	DaysOld                interface{}              `json:"days_old"`
+	AbsAmount              int64                    `json:"abs_amount"`
+	AgingCategory          string                   `json:"aging_category"`
+	DaysOpenToPfs          int32                    `json:"days_open_to_pfs"`
+	DaysPfsToComplete      int32                    `json:"days_pfs_to_complete"`
+	DaysComplete           int32                    `json:"days_complete"`
 }
 
 type ActiveNonipacWithVendorInfo struct {
@@ -581,6 +586,9 @@ type ActiveNonipacWithVendorInfo struct {
 	UpdatedAt                   pgtype.Timestamptz     `json:"updated_at"`
 	AgencyID                    string                 `json:"agency_id"`
 	BureauCode                  string                 `json:"bureau_code"`
+	DaysOld                     interface{}            `json:"days_old"`
+	AgingCategory               string                 `json:"aging_category"`
+	AbsAmount                   int64                  `json:"abs_amount"`
 }
 
 type AgencyBureau struct {

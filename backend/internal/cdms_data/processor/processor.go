@@ -49,14 +49,15 @@ var validBusinessLines = map[string]bool{
 }
 
 type Processor struct {
-	db        *database.DBClient
-	logger    *slog.Logger
-	cfg       *config.Config
-	gcsClient *storage.Client
-	gcsBucket string
+	db           *database.DBClient
+	logger       *slog.Logger
+	cfg          *config.Config
+	gcsClient    *storage.Client
+	gcsBucket    string
+	systemUserID int64
 }
 
-func NewProcessor(db *database.DBClient, logger *slog.Logger, cfg *config.Config) (*Processor, error) {
+func NewProcessor(dbClient *database.DBClient, logger *slog.Logger, cfg *config.Config) (*Processor, error) {
 	ctx := context.Background()
 	var clientOptions []option.ClientOption
 	if keyFilePath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS"); keyFilePath != "" {
@@ -67,12 +68,23 @@ func NewProcessor(db *database.DBClient, logger *slog.Logger, cfg *config.Config
 		logger.Error("Failed to create GCS client for processor", "error", err)
 		return nil, fmt.Errorf("failed to create GCS client for processor: %w", err)
 	}
+
+	// Uses the correct package `db` and the correct variable `dbClient`
+	queries := db.New(dbClient.Pool)
+	systemUser, err := queries.GetUserByEmail(ctx, "system@cdms.local")
+	if err != nil {
+		logger.Error("CRITICAL: Failed to fetch system user ID on startup", "error", err)
+		return nil, fmt.Errorf("failed to fetch system user ID, processor cannot start: %w", err)
+	}
+
+	// This is now the complete and correct way to initialize the Processor.
 	return &Processor{
-		db:        db,
-		logger:    logger,
-		cfg:       cfg,
-		gcsClient: gcsClient,
-		gcsBucket: cfg.GCSBucketName,
+		db:           dbClient, // Use the parameter variable
+		logger:       logger,
+		cfg:          cfg,
+		gcsClient:    gcsClient,
+		gcsBucket:    cfg.GCSBucketName,
+		systemUserID: systemUser.ID, // Use the 'systemUser' variable to satisfy the compiler
 	}, nil
 }
 
@@ -253,6 +265,11 @@ func (p *Processor) executeMergeTransaction(ctx context.Context, uploadID string
 		return 0, fmt.Errorf("failed to begin pgx transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, "SET LOCAL app.user_id = $1", p.systemUserID)
+	if err != nil {
+		return 0, fmt.Errorf("failed to set user for transaction: %w", err)
+	}
 
 	q := db.New(tx)
 	var rowsAffected int64
