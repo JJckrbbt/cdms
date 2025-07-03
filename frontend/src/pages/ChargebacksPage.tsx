@@ -4,8 +4,18 @@ import { Chargeback, columns } from "@/components/chargebacks/columns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DetailsDrawer } from "@/components/DetailsDrawer";
 
-
 const PAGE_SIZE = 500;
+
+const chargebackStatusOptions = [
+  'Open',
+  'Hold Pending External Action',
+  'Hold Pending Internal Action',
+  'In Research',
+  'Passed to PFS',
+  'Completed by PFS',
+  'PFS Return to GSA',
+  'New'
+];
 
 interface ChargebacksPageProps {
   onUploadSuccess?: () => void; // Optional, as it's not directly used here for refresh
@@ -58,6 +68,36 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
     }
   }, [onUploadSuccess]);
 
+  const handleSaveChargeback = async (updatedData: Chargeback) => {
+    try {
+      if (typeof updatedData.id !== 'number') {
+        console.error("Invalid ID for chargeback update:", updatedData.id);
+        return;
+      }
+      const response = await fetch(`http://10.98.1.142:8080/api/chargebacks/${updatedData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh the data after successful update
+      fetchChargebacks();
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Failed to save chargeback:", error);
+    }
+  };
+
+  const handleCancelChargeback = () => {
+    setIsDrawerOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <DataTable 
@@ -82,17 +122,27 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
           {selectedChargeback && (
             <DetailsDrawer
               data={selectedChargeback}
-              fields={[
-                { key: "id", label: "ID" },
-                { key: "bd_doc_num", label: "Document Number" },
-                { key: "customer_name", label: "Customer Name" },
-                { key: "current_status", label: "Current Status" },
-                { key: "region", label: "Region" },
-                { key: "vendor", label: "Vendor" },
-                { key: "alc", label: "ALC" },
-                { key: "customer_tas", label: "Customer TAS" },
-                { key: "org_code", label: "Org Code" },
-              ]}
+              fields={{
+                main: [
+                  { key: "id", label: "ID" },
+                  { key: "bd_doc_num", label: "Document Number" },
+                  { key: "customer_name", label: "Customer Name" },
+                  { key: "region", label: "Region" },
+                  { key: "vendor", label: "Vendor" },
+                  { key: "alc", label: "ALC" },
+                  { key: "customer_tas", label: "Customer TAS" },
+                  { key: "org_code", label: "Org Code" },
+                  { key: "chargeback_amount", label: "Chargeback Amount", type: "currency" },
+                ],
+                status: [
+                  { key: "current_status", label: "Current Status", options: chargebackStatusOptions },
+                  { key: "gsa_poc", label: "GSA POC" },
+                  { key: "pfs_poc", label: "PFS POC" },
+                ],
+                comments: [],
+              }}
+              onSave={handleSaveChargeback}
+              onCancel={handleCancelChargeback}
             />
           )}
         </SheetContent>

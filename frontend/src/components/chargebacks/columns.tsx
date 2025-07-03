@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTableColumnHeader } from "@/components/ui/DataTableColumnHeader"
+import { formatCurrency } from "@/lib/utils";
 
 export type Chargeback = {
   id: number;
@@ -13,6 +14,9 @@ export type Chargeback = {
   alc: string;
   customer_tas: string;
   org_code: string;
+  gsa_poc: number | null;
+  pfs_poc: number | null;
+  chargeback_amount: number;
 };
 
 export const columns: ColumnDef<Chargeback>[] = [
@@ -62,6 +66,15 @@ export const columns: ColumnDef<Chargeback>[] = [
     accessorKey: "org_code",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Org Code" />
+    ),
+  },
+  {
+    accessorKey: "chargeback_amount",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Chargeback Amount" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-right">{formatCurrency(row.getValue("chargeback_amount"))}</div>
     ),
   },
 ]

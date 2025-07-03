@@ -1,9 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Home, LineChart, Settings } from "lucide-react";
+import { Bell, Home, LineChart, Settings, Upload } from "lucide-react";
 import AppLogo from "@/assets/CDMSTransparent.png";
 import { Link } from "react-router-dom";
 
-export function Sidebar() {
+interface SidebarProps {
+  onUploadReportClick: () => void;
+}
+
+export function Sidebar({ onUploadReportClick }: SidebarProps) {
   return (
     <div className="flex h-full flex-col p-4">
       <div className="mb-8 flex items-center gap-2">
@@ -34,12 +38,16 @@ export function Sidebar() {
         </Link>
       </nav>
 
-      {/* Spacer to push admin link to the bottom */}
+      {/* Spacer to push admin link and upload button to the bottom */}
       <div className="mt-auto" />
 
-      {/* Admin Navigation */}
+      {/* Admin and Upload Navigation */}
       <div className="pt-4 border-t">
         <nav className="flex flex-col gap-2">
+          <Button variant="ghost" className="justify-start gap-2" onClick={onUploadReportClick}>
+            <Upload className="h-4 w-4" />
+            Upload Report
+          </Button>
           <Button variant="ghost" className="justify-start gap-2">
             <Settings className="h-4 w-4" />
             Admin

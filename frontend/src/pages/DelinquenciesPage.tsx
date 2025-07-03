@@ -4,6 +4,23 @@ import { Delinquency, columns } from "@/components/delinquencies/columns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DetailsDrawer } from "@/components/DetailsDrawer";
 
+const statusOptions = [
+  'Open',
+  'Refund',
+  'Offset',
+  'In Process',
+  'Write Off',
+  'Referred to Treasury for Collections',
+  'Return Credit to Treasury',
+  'Waiting on Customer Response',
+  'Waiting on GSA Response Pending Payment',
+  'Closed - Payment Received',
+  'Reverse to Income',
+  'Bill as IPAC',
+  'Bill as DoD',
+  'EIS Issues'
+];
+
 const PAGE_SIZE = 500;
 
 export function DelinquenciesPage() {
@@ -43,6 +60,36 @@ export function DelinquenciesPage() {
     setIsDrawerOpen(true);
   };
 
+  const handleSaveDelinquency = async (updatedData: Delinquency) => {
+    try {
+      if (typeof updatedData.id !== 'number') {
+        console.error("Invalid ID for delinquency update:", updatedData.id);
+        return;
+      }
+      const response = await fetch(`http://10.98.1.142:8080/api/delinquencies/${updatedData.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refresh the data after successful update
+      fetchDelinquencies();
+      setIsDrawerOpen(false);
+    } catch (error) {
+      console.error("Failed to save delinquency:", error);
+    }
+  };
+
+  const handleCancelDelinquency = () => {
+    setIsDrawerOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <DataTable 
@@ -67,15 +114,24 @@ export function DelinquenciesPage() {
           {selectedDelinquency && (
             <DetailsDrawer
               data={selectedDelinquency}
-              fields={[
-                { key: "business_line", label: "Business Line" },
-                { key: "document_number", label: "Document Number" },
-                { key: "vendor_code", label: "Vendor Code" },
-                { key: "status", label: "Status" },
-                { key: "billed_total_amount", label: "Billed Total Amount" },
-                { key: "debit_outstanding_amount", label: "Debit Outstanding Amount" },
-                { key: "credit_outstanding_amount", label: "Credit Outstanding Amount" },
-              ]}
+              fields={{
+                main: [
+                  { key: "business_line", label: "Business Line" },
+                  { key: "document_number", label: "Document Number" },
+                  { key: "vendor_code", label: "Vendor Code" },
+                  { key: "billed_total_amount", label: "Billed Total Amount", type: "currency" },
+                  { key: "debit_outstanding_amount", label: "Debit Outstanding Amount", type: "currency" },
+                  { key: "credit_outstanding_amount", label: "Credit Outstanding Amount", type: "currency" },
+                ],
+                status: [
+                  { key: "current_status", label: "Current Status", options: statusOptions },
+                  { key: "gsa_poc", label: "GSA POC" },
+                  { key: "pfs_poc", label: "PFS POC" },
+                ],
+                comments: [],
+              }}
+              onSave={handleSaveDelinquency}
+              onCancel={handleCancelDelinquency}
             />
           )}
         </SheetContent>

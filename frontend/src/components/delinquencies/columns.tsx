@@ -1,12 +1,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "@/components/ui/DataTableColumnHeader";
+import { formatCurrency } from "@/lib/utils";
 
 export type Delinquency = {
   id: number;
   business_line: string;
   document_number: string; // Document Number
   vendor_code: string; // Vendor Code
-  status: string; // Current Status as Status
+  current_status: string; // Current Status as Status
+  gsa_poc: number | null;
+  pfs_poc: number | null;
   billed_total_amount: number;
   debit_outstanding_amount: number; // Debit Outstanding Amount
   credit_outstanding_amount: number; // Credit Outstanding Amount
@@ -32,7 +35,7 @@ export const columns: ColumnDef<Delinquency>[] = [
     ),
   },
   {
-    accessorKey: "status",
+    accessorKey: "current_status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
@@ -42,17 +45,26 @@ export const columns: ColumnDef<Delinquency>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Billed Total Amount" />
     ),
+    cell: ({ row }) => (
+      <div className="text-right">{formatCurrency(row.getValue("billed_total_amount"))}</div>
+    ),
   },
   {
     accessorKey: "debit_outstanding_amount",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Debit Outstanding Amount" />
     ),
+    cell: ({ row }) => (
+      <div className="text-right">{formatCurrency(row.getValue("debit_outstanding_amount"))}</div>
+    ),
   },
   {
     accessorKey: "credit_outstanding_amount",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Credit Outstanding Amount" />
+    ),
+    cell: ({ row }) => (
+      <div className="text-right">{formatCurrency(row.getValue("credit_outstanding_amount"))}</div>
     ),
   },
 ];

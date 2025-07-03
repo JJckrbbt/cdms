@@ -29,7 +29,7 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
     <div className="h-screen flex">
       {/* Persistent Sidebar for Desktop */}
       <div className="hidden md:block fixed top-0 left-0 h-full w-[280px] border-r bg-muted/40">
-        <Sidebar />
+        <Sidebar onUploadReportClick={() => setIsUploadModalOpen(true)} />
       </div>
 
       <div className="flex flex-col flex-1 md:ml-[280px]">
@@ -49,23 +49,6 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
           
           {/* Header Actions */}
           <div className="flex w-full items-center gap-4 justify-end">
-            <Sheet open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Report
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Upload Report</SheetTitle>
-                  <SheetDescription>
-                    Select a report type and upload your file.
-                  </SheetDescription>
-                </SheetHeader>
-                <UploadReportModal onClose={() => setIsUploadModalOpen(false)} onUploadSuccess={onUploadSuccess} />
-              </SheetContent>
-            </Sheet>
             <div className="flex items-center space-x-2">
               {theme === "light" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               <Switch
@@ -81,7 +64,7 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                   className="rounded-full"
                 >
                   <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                    <AvatarImage src="../assets/jjckrbbt.png" alt="@jjckrbbt" />
                     <AvatarFallback>JJ</AvatarFallback>
                   </Avatar>
                 </Button>
@@ -91,19 +74,30 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </header>
+          </header>
 
         <main className="flex-1 flex flex-col overflow-hidden">
           <div className="p-6 h-full">
             {children}
           </div>
         </main>
+        <Sheet open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+              <SheetContent side="bottom" className="w-1/3 ml-0 mr-auto">
+                <SheetHeader>
+                  <SheetTitle>Upload Report</SheetTitle>
+                  <SheetDescription>
+                    Select a report type and upload your file.
+                  </SheetDescription>
+                </SheetHeader>
+                <UploadReportModal onClose={() => setIsUploadModalOpen(false)} onUploadSuccess={onUploadSuccess} />
+              </SheetContent>
+            </Sheet>
       </div>
+      
     </div>
   );
 }
