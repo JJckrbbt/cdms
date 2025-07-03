@@ -22,7 +22,7 @@ CREATE TABLE "nonipac" (
     "document_number" VARCHAR(20) NOT NULL UNIQUE,
     "vendor_code" VARCHAR(8) NOT NULL,
     "collection_due_date" DATE NOT NULL,
-    "current_status" cdms_status,
+    "current_status" cdms_status NOT NULL DEFAULT 'Open',
     "pfs_poc" BIGINT, -- (FK to user.id)
     "gsa_poc" BIGINT, -- (FK to user.id)
     "customer_poc" BIGINT, -- (FK to customer_poc.id)

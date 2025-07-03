@@ -22,7 +22,6 @@ const (
 	CdmsStatusPassedtoPFS                        CdmsStatus = "Passed to PFS"
 	CdmsStatusCompletedbyPFS                     CdmsStatus = "Completed by PFS"
 	CdmsStatusPFSReturntoGSA                     CdmsStatus = "PFS Return to GSA"
-	CdmsStatusNew                                CdmsStatus = "New"
 	CdmsStatusRefund                             CdmsStatus = "Refund"
 	CdmsStatusOffset                             CdmsStatus = "Offset"
 	CdmsStatusInProcess                          CdmsStatus = "In Process"
@@ -532,7 +531,7 @@ type ActiveNonipacWithVendorInfo struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               NullCdmsStatus         `json:"current_status"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
@@ -713,7 +712,7 @@ type Nonipac struct {
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
-	CurrentStatus               NullCdmsStatus         `json:"current_status"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`
@@ -820,7 +819,7 @@ type TempNonipacStaging struct {
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
-	CurrentStatus               NullCdmsStatus         `json:"current_status"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`

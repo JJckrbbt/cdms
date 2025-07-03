@@ -117,8 +117,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type AdminUpdateDelinquencyParams struct {
-	ID            int64          `json:"id"`
-	CurrentStatus NullCdmsStatus `json:"current_status"`
+	ID            int64      `json:"id"`
+	CurrentStatus CdmsStatus `json:"current_status"`
 }
 
 // Updates the admin-modifiable fields of a specific delinquency record
@@ -248,8 +248,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type PFSUpdateDelinquencyParams struct {
-	ID            int64          `json:"id"`
-	CurrentStatus NullCdmsStatus `json:"current_status"`
+	ID            int64      `json:"id"`
+	CurrentStatus CdmsStatus `json:"current_status"`
 }
 
 // Updates the user-modifiable fields of a specific delinquency record
@@ -394,8 +394,8 @@ RETURNING id, reporting_source, business_line, billed_total_amount, principle_am
 `
 
 type UserUpdateDelinquencyParams struct {
-	ID            int64          `json:"id"`
-	CurrentStatus NullCdmsStatus `json:"current_status"`
+	ID            int64      `json:"id"`
+	CurrentStatus CdmsStatus `json:"current_status"`
 }
 
 // Updates the user-modifiable fields of a specific delinquency record

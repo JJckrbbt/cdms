@@ -8,8 +8,7 @@ CHECK (current_status IN (
     'In Research',
     'Passed to PFS',
     'Completed by PFS',
-    'PFS Return to GSA',
-    'New'
+    'PFS Return to GSA'
 ));
 
 -- Add a constraint to the nonipac table to only allow valid statuses for non-ipac items.

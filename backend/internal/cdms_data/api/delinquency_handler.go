@@ -111,7 +111,6 @@ func (h *DelinquencyHandler) HandleCreate(c echo.Context) error {
 		CollectionDueDate:           pgtype.Date{Time: collectionDueDate, Valid: true},
 		OpenDate:                    pgtype.Date{Time: openDate, Valid: true},
 		Title:                       pgtype.Text{String: derefString(req.Title), Valid: req.Title != nil},
-		CurrentStatus:               db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(derefStringWithDefault(req.CurrentStatus, "Open")), Valid: true},
 	}
 
 	delinquency, err := h.queries.CreateDelinquency(c.Request().Context(), params)
@@ -234,7 +233,7 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 		}
 		updatedDelinquency, updateErr = h.queries.AdminUpdateDelinquency(ctx, params)
 
@@ -249,7 +248,7 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 		}
 		updatedDelinquency, updateErr = h.queries.PFSUpdateDelinquency(ctx, params)
 
@@ -261,12 +260,12 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 			return err
 		}
 
-		params := db.UserUpdateDelinquencyParams{ // Note: Typo 'Delinquncy' comes from your SQL query name
+		params := db.UserUpdateDelinquencyParams{
 			ID:            id,
 			CurrentStatus: existing.CurrentStatus,
 		}
 		if req.CurrentStatus != nil {
-			params.CurrentStatus = db.NullCdmsStatus{CdmsStatus: db.CdmsStatus(*req.CurrentStatus), Valid: true}
+			params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 		}
 		updatedDelinquency, updateErr = h.queries.UserUpdateDelinquency(ctx, params)
 	}

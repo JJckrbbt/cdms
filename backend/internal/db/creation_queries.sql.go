@@ -176,9 +176,9 @@ INSERT INTO "nonipac" (
     vendor_code,
     collection_due_date,
     open_date,
+    current_status,
     -- Nullable fields
-    title,
-    current_status
+    title
 ) VALUES (
     'ApplicationCreated',
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
@@ -205,8 +205,8 @@ type CreateDelinquencyParams struct {
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
 	OpenDate                    pgtype.Date            `json:"open_date"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	Title                       pgtype.Text            `json:"title"`
-	CurrentStatus               NullCdmsStatus         `json:"current_status"`
 }
 
 // Inserts a new delinquency (nonipac) record, from a manual UI entry.
@@ -231,8 +231,8 @@ func (q *Queries) CreateDelinquency(ctx context.Context, arg CreateDelinquencyPa
 		arg.VendorCode,
 		arg.CollectionDueDate,
 		arg.OpenDate,
-		arg.Title,
 		arg.CurrentStatus,
+		arg.Title,
 	)
 	var i Nonipac
 	err := row.Scan(

@@ -59,9 +59,9 @@ INSERT INTO "nonipac" (
     vendor_code,
     collection_due_date,
     open_date,
+    current_status,
     -- Nullable fields
-    title,
-    current_status
+    title
 ) VALUES (
     'ApplicationCreated',
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20

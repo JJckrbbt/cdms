@@ -515,7 +515,7 @@ type ListActiveDelinquenciesRow struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               NullCdmsStatus         `json:"current_status"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
