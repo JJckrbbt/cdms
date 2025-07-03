@@ -1,0 +1,55 @@
+steps:
+  # Step 1: Install frontend dependencies
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'npm-install'
+    args: ['install']
+    dir: 'frontend'
+
+  # Step 2: Build the static frontend
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'build-frontend'
+    args: ['run', 'build']
+    dir: 'frontend'
+    waitFor: ['npm-install']
+
+  # Step 3: Build the backend Docker image
+  # The image is tagged with the commit SHA for versioning
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend-image'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-east1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+      - '.'
+      - '-f'
+      - 'Dockerfile'
+    dir: 'backend'
+
+  # Step 4: Push the backend image to Google Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend-image'
+    args: ['push', 'us-east1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}']
+    waitFor: ['build-backend-image']
+
+  # Step 5: Deploy the new image to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-backend'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'cdms-backend'
+      - '--image=us-east1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+      - '--region=us-east1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--update-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
+      - '--set-env-vars=GCS_BUCKET_NAME=your-cdms-report-bucket-name'
+    waitFor: ['push-backend-image']
+
+# Store the final image URI for reference
+images:
+  - 'us-east1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
