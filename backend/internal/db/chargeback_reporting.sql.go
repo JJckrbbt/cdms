@@ -59,7 +59,7 @@ const getChargebackStatusSummary = `-- name: GetChargebackStatusSummary :many
 SELECT
     current_status,
     COUNT(*) AS status_count,
-    SUM(abs_amount) AS total_value,
+    SUM(abs_amount)::NUMERIC AS total_value,
     (SUM(abs_amount) * 100.0 / SUM(SUM(abs_amount)) OVER ())::NUMERIC(5, 2) AS percentage_of_total
 FROM
     historical_chargebacks_with_vendor_info
@@ -72,7 +72,7 @@ GROUP BY
 type GetChargebackStatusSummaryRow struct {
 	CurrentStatus     CdmsStatus     `json:"current_status"`
 	StatusCount       int64          `json:"status_count"`
-	TotalValue        int64          `json:"total_value"`
+	TotalValue        pgtype.Numeric `json:"total_value"`
 	PercentageOfTotal pgtype.Numeric `json:"percentage_of_total"`
 }
 

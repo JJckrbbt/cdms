@@ -3,7 +3,7 @@
 SELECT
     current_status,
     COUNT(*) AS status_count,
-    SUM(abs_amount) AS total_value,
+    SUM(abs_amount)::NUMERIC AS total_value,
     (SUM(abs_amount) * 100.0 / SUM(SUM(abs_amount)) OVER ())::NUMERIC(5, 2) AS percentage_of_total
 FROM
     historical_chargebacks_with_vendor_info
