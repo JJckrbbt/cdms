@@ -14,8 +14,8 @@ export type Chargeback = {
   alc: string;
   customer_tas: string;
   org_code: string;
-  gsa_poc: number | null;
-  pfs_poc: number | null;
+  gsa_poc?: number | null;
+  pfs_poc?: number | null;
   chargeback_amount: number;
 };
 

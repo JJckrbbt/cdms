@@ -74,15 +74,31 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
         console.error("Invalid ID for chargeback update:", updatedData.id);
         return;
       }
+      const payload = {
+        bd_doc_num: updatedData.bd_doc_num,
+        customer_name: updatedData.customer_name,
+        current_status: updatedData.current_status,
+        region: updatedData.region,
+        vendor: updatedData.vendor,
+        alc: updatedData.alc,
+        customer_tas: updatedData.customer_tas,
+        org_code: updatedData.org_code,
+        gsa_poc: updatedData.gsa_poc,
+        pfs_poc: updatedData.pfs_poc,
+        chargeback_amount: updatedData.chargeback_amount,
+      };
+
       const response = await fetch(`http://10.98.1.142:8080/api/chargebacks/${updatedData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
