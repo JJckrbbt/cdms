@@ -17,17 +17,14 @@ SET
     current_status = $2,
     reason_code = $3,
     action = $4,
-    issue_in_research_date = $5,
-    alc_to_rebill = $6,
-    tas_to_rebill = $7,
-    line_of_accounting_rebill = $8,
-    special_instruction = $9,
-    passed_to_psf = $10,
-    pfs_completion_date = $11,
+    alc_to_rebill = $5,
+    tas_to_rebill = $6,
+    line_of_accounting_rebill = $7,
+    special_instruction = $8,
     updated_at = NOW()
 WHERE
     id = $1
-RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active
+RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active
 `
 
 type AdminUpdateChargebackParams struct {
@@ -35,13 +32,10 @@ type AdminUpdateChargebackParams struct {
 	CurrentStatus          CdmsStatus               `json:"current_status"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
-	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
 	AlcToRebill            pgtype.Text              `json:"alc_to_rebill"`
 	TasToRebill            pgtype.Text              `json:"tas_to_rebill"`
 	LineOfAccountingRebill pgtype.Text              `json:"line_of_accounting_rebill"`
 	SpecialInstruction     pgtype.Text              `json:"special_instruction"`
-	PassedToPsf            pgtype.Date              `json:"passed_to_psf"`
-	PfsCompletionDate      pgtype.Date              `json:"pfs_completion_date"`
 }
 
 // Updates the admin-modifiable fields of a specific chargeback record
@@ -51,13 +45,10 @@ func (q *Queries) AdminUpdateChargeback(ctx context.Context, arg AdminUpdateChar
 		arg.CurrentStatus,
 		arg.ReasonCode,
 		arg.Action,
-		arg.IssueInResearchDate,
 		arg.AlcToRebill,
 		arg.TasToRebill,
 		arg.LineOfAccountingRebill,
 		arg.SpecialInstruction,
-		arg.PassedToPsf,
-		arg.PfsCompletionDate,
 	)
 	var i Chargeback
 	err := row.Scan(
@@ -87,7 +78,6 @@ func (q *Queries) AdminUpdateChargeback(ctx context.Context, arg AdminUpdateChar
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -95,10 +85,6 @@ func (q *Queries) AdminUpdateChargeback(ctx context.Context, arg AdminUpdateChar
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,
@@ -164,32 +150,22 @@ const pFSUpdateChargeback = `-- name: PFSUpdateChargeback :one
 UPDATE chargeback
 SET
     current_status = $2,
-    passed_to_psf = $3,
-    new_ipac_document_ref = $4,
-    pfs_completion_date = $5,
+    new_ipac_document_ref = $3,
     updated_at = NOW()
 WHERE
     id = $1
-RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active
+RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active
 `
 
 type PFSUpdateChargebackParams struct {
 	ID                 int64       `json:"id"`
 	CurrentStatus      CdmsStatus  `json:"current_status"`
-	PassedToPsf        pgtype.Date `json:"passed_to_psf"`
 	NewIpacDocumentRef pgtype.Text `json:"new_ipac_document_ref"`
-	PfsCompletionDate  pgtype.Date `json:"pfs_completion_date"`
 }
 
 // Updates the user-modifiable fields of a specific chargeback record
 func (q *Queries) PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargebackParams) (Chargeback, error) {
-	row := q.db.QueryRow(ctx, pFSUpdateChargeback,
-		arg.ID,
-		arg.CurrentStatus,
-		arg.PassedToPsf,
-		arg.NewIpacDocumentRef,
-		arg.PfsCompletionDate,
-	)
+	row := q.db.QueryRow(ctx, pFSUpdateChargeback, arg.ID, arg.CurrentStatus, arg.NewIpacDocumentRef)
 	var i Chargeback
 	err := row.Scan(
 		&i.ID,
@@ -218,7 +194,6 @@ func (q *Queries) PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargeba
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -226,10 +201,6 @@ func (q *Queries) PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargeba
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,
@@ -297,16 +268,14 @@ SET
     current_status = $2,
     reason_code = $3,
     action = $4,
-    issue_in_research_date = $5,
-    alc_to_rebill = $6,
-    tas_to_rebill = $7,
-    line_of_accounting_rebill = $8,
-    special_instruction = $9,
-    passed_to_psf = $10,
+    alc_to_rebill = $5,
+    tas_to_rebill = $6,
+    line_of_accounting_rebill = $7,
+    special_instruction = $8,
     updated_at = NOW()
 WHERE
     id = $1
-RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active
+RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active
 `
 
 type UserUpdateChargebackParams struct {
@@ -314,12 +283,10 @@ type UserUpdateChargebackParams struct {
 	CurrentStatus          CdmsStatus               `json:"current_status"`
 	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
 	Action                 NullChargebackAction     `json:"action"`
-	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
 	AlcToRebill            pgtype.Text              `json:"alc_to_rebill"`
 	TasToRebill            pgtype.Text              `json:"tas_to_rebill"`
 	LineOfAccountingRebill pgtype.Text              `json:"line_of_accounting_rebill"`
 	SpecialInstruction     pgtype.Text              `json:"special_instruction"`
-	PassedToPsf            pgtype.Date              `json:"passed_to_psf"`
 }
 
 // Updates the user-modifiable fields of a specific chargeback record
@@ -329,12 +296,10 @@ func (q *Queries) UserUpdateChargeback(ctx context.Context, arg UserUpdateCharge
 		arg.CurrentStatus,
 		arg.ReasonCode,
 		arg.Action,
-		arg.IssueInResearchDate,
 		arg.AlcToRebill,
 		arg.TasToRebill,
 		arg.LineOfAccountingRebill,
 		arg.SpecialInstruction,
-		arg.PassedToPsf,
 	)
 	var i Chargeback
 	err := row.Scan(
@@ -364,7 +329,6 @@ func (q *Queries) UserUpdateChargeback(ctx context.Context, arg UserUpdateCharge
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -372,10 +336,6 @@ func (q *Queries) UserUpdateChargeback(ctx context.Context, arg UserUpdateCharge
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,

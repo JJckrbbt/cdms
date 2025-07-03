@@ -9,6 +9,7 @@ CREATE TYPE cdms_status AS ENUM (
   'Passed to PFS',
   'Completed by PFS',
   'PFS Return to GSA',
+  'Reconciled - Off Report',
   'Refund',
   'Offset',
   'In Process',

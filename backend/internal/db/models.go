@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/shopspring/decimal"
 )
 
 type CdmsStatus string
@@ -22,6 +21,7 @@ const (
 	CdmsStatusPassedtoPFS                        CdmsStatus = "Passed to PFS"
 	CdmsStatusCompletedbyPFS                     CdmsStatus = "Completed by PFS"
 	CdmsStatusPFSReturntoGSA                     CdmsStatus = "PFS Return to GSA"
+	CdmsStatusReconciledOffReport                CdmsStatus = "Reconciled - Off Report"
 	CdmsStatusRefund                             CdmsStatus = "Refund"
 	CdmsStatusOffset                             CdmsStatus = "Offset"
 	CdmsStatusInProcess                          CdmsStatus = "In Process"
@@ -466,56 +466,50 @@ func (ns NullUserOrg) Value() (driver.Value, error) {
 }
 
 type ActiveChargebacksWithVendorInfo struct {
-	ID                     int64                    `json:"id"`
-	Fund                   ChargebackFund           `json:"fund"`
-	BusinessLine           ChargebackBusinessLine   `json:"business_line"`
-	Region                 int16                    `json:"region"`
-	LocationSystem         pgtype.Text              `json:"location_system"`
-	Program                string                   `json:"program"`
-	AlNum                  int16                    `json:"al_num"`
-	SourceNum              string                   `json:"source_num"`
-	AgreementNum           pgtype.Text              `json:"agreement_num"`
-	Title                  pgtype.Text              `json:"title"`
-	Alc                    string                   `json:"alc"`
-	CustomerTas            string                   `json:"customer_tas"`
-	ClassID                pgtype.Text              `json:"class_id"`
-	CustomerName           string                   `json:"customer_name"`
-	OrgCode                string                   `json:"org_code"`
-	DocumentDate           pgtype.Date              `json:"document_date"`
-	AccompDate             pgtype.Date              `json:"accomp_date"`
-	AssignedRebillDrn      pgtype.Text              `json:"assigned_rebill_drn"`
-	ChargebackAmount       pgtype.Numeric           `json:"chargeback_amount"`
-	Statement              string                   `json:"statement"`
-	BdDocNum               string                   `json:"bd_doc_num"`
-	Vendor                 string                   `json:"vendor"`
-	ArticlesServices       pgtype.Text              `json:"articles_services"`
-	CurrentStatus          CdmsStatus               `json:"current_status"`
-	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
-	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
-	Action                 NullChargebackAction     `json:"action"`
-	AlcToRebill            pgtype.Text              `json:"alc_to_rebill"`
-	TasToRebill            pgtype.Text              `json:"tas_to_rebill"`
-	LineOfAccountingRebill pgtype.Text              `json:"line_of_accounting_rebill"`
-	SpecialInstruction     pgtype.Text              `json:"special_instruction"`
-	NewIpacDocumentRef     pgtype.Text              `json:"new_ipac_document_ref"`
-	PfsCompletionDate      pgtype.Date              `json:"pfs_completion_date"`
-	ReconciliationDate     pgtype.Date              `json:"reconciliation_date"`
-	ChargebackCount        pgtype.Int2              `json:"chargeback_count"`
-	PassedToPsf            pgtype.Date              `json:"passed_to_psf"`
-	CreatedAt              pgtype.Timestamptz       `json:"created_at"`
-	UpdatedAt              pgtype.Timestamptz       `json:"updated_at"`
-	AgencyID               string                   `json:"agency_id"`
-	BureauCode             string                   `json:"bureau_code"`
-	DaysOld                interface{}              `json:"days_old"`
-	AbsAmount              decimal.Decimal          `json:"abs_amount"`
-	AgingCategory          string                   `json:"aging_category"`
-	DaysOpenToPfs          pgtype.Int4              `json:"days_open_to_pfs"`
-	DaysPfsToComplete      pgtype.Int4              `json:"days_pfs_to_complete"`
-	DaysComplete           pgtype.Int4              `json:"days_complete"`
+	ID                     int64                     `json:"id"`
+	ReportingSource        ChargebackReportingSource `json:"reporting_source"`
+	Fund                   ChargebackFund            `json:"fund"`
+	BusinessLine           ChargebackBusinessLine    `json:"business_line"`
+	Region                 int16                     `json:"region"`
+	LocationSystem         pgtype.Text               `json:"location_system"`
+	Program                string                    `json:"program"`
+	AlNum                  int16                     `json:"al_num"`
+	SourceNum              string                    `json:"source_num"`
+	AgreementNum           pgtype.Text               `json:"agreement_num"`
+	Title                  pgtype.Text               `json:"title"`
+	Alc                    string                    `json:"alc"`
+	CustomerTas            string                    `json:"customer_tas"`
+	TaskSubtask            string                    `json:"task_subtask"`
+	ClassID                pgtype.Text               `json:"class_id"`
+	CustomerName           string                    `json:"customer_name"`
+	OrgCode                string                    `json:"org_code"`
+	DocumentDate           pgtype.Date               `json:"document_date"`
+	AccompDate             pgtype.Date               `json:"accomp_date"`
+	AssignedRebillDrn      pgtype.Text               `json:"assigned_rebill_drn"`
+	ChargebackAmount       pgtype.Numeric            `json:"chargeback_amount"`
+	Statement              string                    `json:"statement"`
+	BdDocNum               string                    `json:"bd_doc_num"`
+	Vendor                 string                    `json:"vendor"`
+	ArticlesServices       pgtype.Text               `json:"articles_services"`
+	CurrentStatus          CdmsStatus                `json:"current_status"`
+	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
+	Action                 NullChargebackAction      `json:"action"`
+	AlcToRebill            pgtype.Text               `json:"alc_to_rebill"`
+	TasToRebill            pgtype.Text               `json:"tas_to_rebill"`
+	LineOfAccountingRebill pgtype.Text               `json:"line_of_accounting_rebill"`
+	SpecialInstruction     pgtype.Text               `json:"special_instruction"`
+	NewIpacDocumentRef     pgtype.Text               `json:"new_ipac_document_ref"`
+	CreatedAt              pgtype.Timestamptz        `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz        `json:"updated_at"`
+	IsActive               bool                      `json:"is_active"`
+	DaysOld                interface{}               `json:"days_old"`
+	AgencyID               string                    `json:"agency_id"`
+	BureauCode             string                    `json:"bureau_code"`
 }
 
 type ActiveNonipacWithVendorInfo struct {
 	ID                          int64                  `json:"id"`
+	ReportingSource             NonipacReportingSource `json:"reporting_source"`
 	BusinessLine                ChargebackBusinessLine `json:"business_line"`
 	BilledTotalAmount           pgtype.Numeric         `json:"billed_total_amount"`
 	PrincipleAmount             pgtype.Numeric         `json:"principle_amount"`
@@ -531,10 +525,10 @@ type ActiveNonipacWithVendorInfo struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               CdmsStatus             `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`
@@ -543,11 +537,10 @@ type ActiveNonipacWithVendorInfo struct {
 	ReconciledDate              pgtype.Date            `json:"reconciled_date"`
 	CreatedAt                   pgtype.Timestamptz     `json:"created_at"`
 	UpdatedAt                   pgtype.Timestamptz     `json:"updated_at"`
+	IsActive                    bool                   `json:"is_active"`
+	DaysOld                     interface{}            `json:"days_old"`
 	AgencyID                    string                 `json:"agency_id"`
 	BureauCode                  string                 `json:"bureau_code"`
-	DaysOld                     interface{}            `json:"days_old"`
-	AgingCategory               string                 `json:"aging_category"`
-	AbsAmount                   decimal.Decimal        `json:"abs_amount"`
 }
 
 type AgencyBureau struct {
@@ -615,7 +608,6 @@ type Chargeback struct {
 	Vendor                 string                    `json:"vendor"`
 	ArticlesServices       pgtype.Text               `json:"articles_services"`
 	CurrentStatus          CdmsStatus                `json:"current_status"`
-	IssueInResearchDate    pgtype.Date               `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
 	Action                 NullChargebackAction      `json:"action"`
 	AlcToRebill            pgtype.Text               `json:"alc_to_rebill"`
@@ -623,10 +615,6 @@ type Chargeback struct {
 	LineOfAccountingRebill pgtype.Text               `json:"line_of_accounting_rebill"`
 	SpecialInstruction     pgtype.Text               `json:"special_instruction"`
 	NewIpacDocumentRef     pgtype.Text               `json:"new_ipac_document_ref"`
-	PfsCompletionDate      pgtype.Date               `json:"pfs_completion_date"`
-	ReconciliationDate     pgtype.Date               `json:"reconciliation_date"`
-	ChargebackCount        pgtype.Int2               `json:"chargeback_count"`
-	PassedToPsf            pgtype.Date               `json:"passed_to_psf"`
 	CreatedAt              pgtype.Timestamptz        `json:"created_at"`
 	UpdatedAt              pgtype.Timestamptz        `json:"updated_at"`
 	IsActive               bool                      `json:"is_active"`
@@ -669,6 +657,55 @@ type CustomerPoc struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	IsActive  bool               `json:"is_active"`
+}
+
+type HistoricalChargebacksWithVendorInfo struct {
+	ID                     int64                     `json:"id"`
+	IsActive               bool                      `json:"is_active"`
+	ReportingSource        ChargebackReportingSource `json:"reporting_source"`
+	Fund                   ChargebackFund            `json:"fund"`
+	BusinessLine           ChargebackBusinessLine    `json:"business_line"`
+	Region                 int16                     `json:"region"`
+	LocationSystem         pgtype.Text               `json:"location_system"`
+	Program                string                    `json:"program"`
+	AlNum                  int16                     `json:"al_num"`
+	SourceNum              string                    `json:"source_num"`
+	AgreementNum           pgtype.Text               `json:"agreement_num"`
+	Title                  pgtype.Text               `json:"title"`
+	Alc                    string                    `json:"alc"`
+	CustomerTas            string                    `json:"customer_tas"`
+	TaskSubtask            string                    `json:"task_subtask"`
+	ClassID                pgtype.Text               `json:"class_id"`
+	CustomerName           string                    `json:"customer_name"`
+	OrgCode                string                    `json:"org_code"`
+	DocumentDate           pgtype.Date               `json:"document_date"`
+	AccompDate             pgtype.Date               `json:"accomp_date"`
+	AssignedRebillDrn      pgtype.Text               `json:"assigned_rebill_drn"`
+	ChargebackAmount       pgtype.Numeric            `json:"chargeback_amount"`
+	Statement              string                    `json:"statement"`
+	BdDocNum               string                    `json:"bd_doc_num"`
+	Vendor                 string                    `json:"vendor"`
+	ArticlesServices       pgtype.Text               `json:"articles_services"`
+	CurrentStatus          CdmsStatus                `json:"current_status"`
+	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
+	Action                 NullChargebackAction      `json:"action"`
+	AlcToRebill            pgtype.Text               `json:"alc_to_rebill"`
+	TasToRebill            pgtype.Text               `json:"tas_to_rebill"`
+	LineOfAccountingRebill pgtype.Text               `json:"line_of_accounting_rebill"`
+	SpecialInstruction     pgtype.Text               `json:"special_instruction"`
+	NewIpacDocumentRef     pgtype.Text               `json:"new_ipac_document_ref"`
+	CreatedAt              pgtype.Timestamptz        `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz        `json:"updated_at"`
+	IssueInResearchDate    interface{}               `json:"issue_in_research_date"`
+	PassedToPfsDate        interface{}               `json:"passed_to_pfs_date"`
+	PfsCompletionDate      interface{}               `json:"pfs_completion_date"`
+	AgencyID               string                    `json:"agency_id"`
+	BureauCode             string                    `json:"bureau_code"`
+	DaysOld                interface{}               `json:"days_old"`
+	AbsAmount              int64                     `json:"abs_amount"`
+	DaysOpenToPfs          int32                     `json:"days_open_to_pfs"`
+	DaysPfsToComplete      int32                     `json:"days_pfs_to_complete"`
+	DaysComplete           int32                     `json:"days_complete"`
 }
 
 type IssueOwnerGsaChargebackMerge struct {
@@ -781,7 +818,6 @@ type TempChargebackStaging struct {
 	Vendor                 string                    `json:"vendor"`
 	ArticlesServices       pgtype.Text               `json:"articles_services"`
 	CurrentStatus          CdmsStatus                `json:"current_status"`
-	IssueInResearchDate    pgtype.Date               `json:"issue_in_research_date"`
 	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
 	Action                 NullChargebackAction      `json:"action"`
 	AlcToRebill            pgtype.Text               `json:"alc_to_rebill"`
@@ -789,10 +825,6 @@ type TempChargebackStaging struct {
 	LineOfAccountingRebill pgtype.Text               `json:"line_of_accounting_rebill"`
 	SpecialInstruction     pgtype.Text               `json:"special_instruction"`
 	NewIpacDocumentRef     pgtype.Text               `json:"new_ipac_document_ref"`
-	PfsCompletionDate      pgtype.Date               `json:"pfs_completion_date"`
-	ReconciliationDate     pgtype.Date               `json:"reconciliation_date"`
-	ChargebackCount        pgtype.Int2               `json:"chargeback_count"`
-	PassedToPsf            pgtype.Date               `json:"passed_to_psf"`
 	CreatedAt              pgtype.Timestamptz        `json:"created_at"`
 	UpdatedAt              pgtype.Timestamptz        `json:"updated_at"`
 	IsActive               bool                      `json:"is_active"`

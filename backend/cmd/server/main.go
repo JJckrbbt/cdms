@@ -88,6 +88,7 @@ func main() {
 	uploadHandler := api.NewUploadHandler(fileImporter, cdmsProcessor, apiLogger)
 	chargebackHandler := api.NewChargebackHandler(realQuerier, apiLogger)
 	delinquencyHandler := api.NewDelinquencyHandler(realQuerier, apiLogger)
+	dashboardHandler := api.NewDashboardHandler(realQuerier, apiLogger)
 
 	appLogger.Info("API handlers initialized.")
 
@@ -189,6 +190,9 @@ func main() {
 	delinquencyRoutes.GET("/:id", delinquencyHandler.HandleGetByID)
 	delinquencyRoutes.POST("", delinquencyHandler.HandleCreate)
 	delinquencyRoutes.PATCH("/:id", delinquencyHandler.HandleUpdate)
+
+	//Dashbord group
+	e.GET("/api/dashboard/chargeback-stats", dashboardHandler.HandleGetChargebackStats)
 
 	e.GET("/foo", func(ctx echo.Context) error {
 		// sentryecho handler will catch it just fine. Also, because we attached "someRandomTag"

@@ -45,7 +45,7 @@ INSERT INTO chargeback (
     'ApplicationCreated',
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26
 )
-RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active
+RETURNING id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active
 `
 
 type CreateChargebackParams struct {
@@ -136,7 +136,6 @@ func (q *Queries) CreateChargeback(ctx context.Context, arg CreateChargebackPara
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -144,10 +143,6 @@ func (q *Queries) CreateChargeback(ctx context.Context, arg CreateChargebackPara
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,

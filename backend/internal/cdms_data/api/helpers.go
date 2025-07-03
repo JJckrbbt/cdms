@@ -33,12 +33,10 @@ func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Charge
 		CurrentStatus:          existing.CurrentStatus,
 		ReasonCode:             existing.ReasonCode,
 		Action:                 existing.Action,
-		IssueInResearchDate:    existing.IssueInResearchDate,
 		AlcToRebill:            existing.AlcToRebill,
 		TasToRebill:            existing.TasToRebill,
 		LineOfAccountingRebill: existing.LineOfAccountingRebill,
 		SpecialInstruction:     existing.SpecialInstruction,
-		PassedToPsf:            existing.PassedToPsf,
 	}
 	// Merge updates from request
 	if req.CurrentStatus != nil {
@@ -50,9 +48,6 @@ func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Charge
 	if req.Action != nil {
 		params.Action = db.NullChargebackAction{ChargebackAction: db.ChargebackAction(*req.Action), Valid: true}
 	}
-	if req.IssueInResearchDate != nil {
-		params.IssueInResearchDate = parseDateToPG(*req.IssueInResearchDate)
-	}
 	if req.ALCToRebill != nil {
 		params.AlcToRebill = pgtype.Text{String: *req.ALCToRebill, Valid: true}
 	}
@@ -65,9 +60,6 @@ func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Charge
 	if req.SpecialInstruction != nil {
 		params.SpecialInstruction = pgtype.Text{String: *req.SpecialInstruction, Valid: true}
 	}
-	if req.PassedToPSF != nil {
-		params.PassedToPsf = parseDateToPG(*req.PassedToPSF)
-	}
 
 	return params
 }
@@ -76,22 +68,14 @@ func buildPFSUpdateParams(req *PFSUpdateChargebackRequest, existing *db.Chargeba
 	params := db.PFSUpdateChargebackParams{
 		ID:                 existing.ID,
 		CurrentStatus:      existing.CurrentStatus,
-		PassedToPsf:        existing.PassedToPsf,
 		NewIpacDocumentRef: existing.NewIpacDocumentRef,
-		PfsCompletionDate:  existing.PfsCompletionDate,
 	}
 	// Merge updates
 	if req.CurrentStatus != nil {
 		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
-	if req.PassedToPSF != nil {
-		params.PassedToPsf = parseDateToPG(*req.PassedToPSF)
-	}
 	if req.NewIPACDocumentRef != nil {
 		params.NewIpacDocumentRef = pgtype.Text{String: *req.NewIPACDocumentRef, Valid: true}
-	}
-	if req.PFSCompletionDate != nil {
-		params.PfsCompletionDate = parseDateToPG(*req.PFSCompletionDate)
 	}
 
 	return params
@@ -103,13 +87,10 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 		CurrentStatus:          existing.CurrentStatus,
 		ReasonCode:             existing.ReasonCode,
 		Action:                 existing.Action,
-		IssueInResearchDate:    existing.IssueInResearchDate,
 		AlcToRebill:            existing.AlcToRebill,
 		TasToRebill:            existing.TasToRebill,
 		LineOfAccountingRebill: existing.LineOfAccountingRebill,
 		SpecialInstruction:     existing.SpecialInstruction,
-		PassedToPsf:            existing.PassedToPsf,
-		PfsCompletionDate:      existing.PfsCompletionDate,
 	}
 	// Merge updates
 	if req.CurrentStatus != nil {
@@ -120,9 +101,6 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 	}
 	if req.Action != nil {
 		params.Action = db.NullChargebackAction{ChargebackAction: db.ChargebackAction(*req.Action), Valid: true}
-	}
-	if req.IssueInResearchDate != nil {
-		params.IssueInResearchDate = parseDateToPG(*req.IssueInResearchDate)
 	}
 	if req.ALCToRebill != nil {
 		params.AlcToRebill = pgtype.Text{String: *req.ALCToRebill, Valid: true}
@@ -135,12 +113,6 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 	}
 	if req.SpecialInstruction != nil {
 		params.SpecialInstruction = pgtype.Text{String: *req.SpecialInstruction, Valid: true}
-	}
-	if req.PassedToPSF != nil {
-		params.PassedToPsf = parseDateToPG(*req.PassedToPSF)
-	}
-	if req.PFSCompletionDate != nil {
-		params.PfsCompletionDate = parseDateToPG(*req.PFSCompletionDate)
 	}
 
 	return params

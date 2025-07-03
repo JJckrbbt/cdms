@@ -34,13 +34,24 @@ type Querier interface {
 	GetActiveDelinquencyByBusinessKey(ctx context.Context, documentNumber string) (ActiveNonipacWithVendorInfo, error)
 	// Fetches a single active delinquency by its primary key from the view.
 	GetActiveDelinquencyByID(ctx context.Context, id int64) (ActiveNonipacWithVendorInfo, error)
+	// Gets the average days for PFS to complete for chargebacks completed within a specific date window.
+	GetAverageDaysForPFSCompletionForWindow(ctx context.Context, arg GetAverageDaysForPFSCompletionForWindowParams) (pgtype.Numeric, error)
+	// Gets the average days from creation to 'Passed to PFS' for chargebacks passed within a specific date window.
+	GetAverageDaysToPFSForWindow(ctx context.Context, arg GetAverageDaysToPFSForWindowParams) (pgtype.Numeric, error)
 	// Fetches a single chargeback directly from the base table for updating.
 	GetChargebackForUpdate(ctx context.Context, id int64) (Chargeback, error)
 	// For a given list of bd_doc_nums, fetch the full business key and reporting source
 	// to check for cross-report conflicts in Go before an UPSERT.
 	GetChargebackSourcesByBDDocNums(ctx context.Context, dollar_1 []string) ([]GetChargebackSourcesByBDDocNumsRow, error)
+	// Gets the count, total value, and percentage of total value for each chargeback status for active items.
+	GetChargebackStatusSummary(ctx context.Context) ([]GetChargebackStatusSummaryRow, error)
 	// Fetches a single chargeback directly from the base table for updating.
 	GetDelinquencyForUpdate(ctx context.Context, id int64) (Nonipac, error)
+	// Gets the count and total value of new chargebacks created within a specific date window.
+	GetNewChargebackStatsForWindow(ctx context.Context, arg GetNewChargebackStatsForWindowParams) (GetNewChargebackStatsForWindowRow, error)
+	// Gets the count of chargebacks passed to PFS and completed by PFS within a specific date window.
+	// This version uses conditional aggregation for better performance and to avoid ambiguity.
+	GetPFSCountsForWindow(ctx context.Context, arg GetPFSCountsForWindowParams) (GetPFSCountsForWindowRow, error)
 	// Retrieve a detailed summary for a specific upload
 	GetUpload(ctx context.Context, id pgtype.UUID) (Upload, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)

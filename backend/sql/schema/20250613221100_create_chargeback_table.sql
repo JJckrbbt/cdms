@@ -28,7 +28,6 @@ CREATE TABLE "chargeback" (
     "vendor" VARCHAR(8) NOT NULL,
     "articles_services" TEXT,
     "current_status" cdms_status NOT NULL DEFAULT 'Open',
-    "issue_in_research_date" DATE,
     "reason_code" chargeback_reason_code,
     "action" chargeback_action,
     "alc_to_rebill" VARCHAR(50),
@@ -36,10 +35,6 @@ CREATE TABLE "chargeback" (
     "line_of_accounting_rebill" TEXT,
     "special_instruction" VARCHAR(200),
     "new_ipac_document_ref" VARCHAR(30),
-    "pfs_completion_date" DATE,
-    "reconciliation_date" DATE,
-    "chargeback_count" SMALLINT,
-    "passed_to_psf" DATE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "is_active" BOOLEAN NOT NULL DEFAULT TRUE

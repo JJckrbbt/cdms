@@ -8,7 +8,8 @@ CHECK (current_status IN (
     'In Research',
     'Passed to PFS',
     'Completed by PFS',
-    'PFS Return to GSA'
+    'PFS Return to GSA',
+    'Reconciled - Off Report'
 ));
 
 -- Add a constraint to the nonipac table to only allow valid statuses for non-ipac items.
@@ -27,7 +28,8 @@ CHECK (current_status IN (
     'Reverse to Income',
     'Bill as IPAC',
     'Bill as DoD',
-    'EIS Issues'
+    'EIS Issues',
+    'Reconciled - Off Report'
 ));
 
 

@@ -9,11 +9,10 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/shopspring/decimal"
 )
 
 const getActiveChargebackByBusinessKey = `-- name: GetActiveChargebackByBusinessKey :one
-SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code, days_old, abs_amount, aging_category, days_open_to_pfs, days_pfs_to_complete, days_complete FROM active_chargebacks_with_vendor_info
+SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active, days_old, agency_id, bureau_code FROM active_chargebacks_with_vendor_info
 WHERE bd_doc_num = $1 AND al_num = $2
 `
 
@@ -28,6 +27,7 @@ func (q *Queries) GetActiveChargebackByBusinessKey(ctx context.Context, arg GetA
 	var i ActiveChargebacksWithVendorInfo
 	err := row.Scan(
 		&i.ID,
+		&i.ReportingSource,
 		&i.Fund,
 		&i.BusinessLine,
 		&i.Region,
@@ -39,6 +39,7 @@ func (q *Queries) GetActiveChargebackByBusinessKey(ctx context.Context, arg GetA
 		&i.Title,
 		&i.Alc,
 		&i.CustomerTas,
+		&i.TaskSubtask,
 		&i.ClassID,
 		&i.CustomerName,
 		&i.OrgCode,
@@ -51,7 +52,6 @@ func (q *Queries) GetActiveChargebackByBusinessKey(ctx context.Context, arg GetA
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -59,26 +59,18 @@ func (q *Queries) GetActiveChargebackByBusinessKey(ctx context.Context, arg GetA
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsActive,
+		&i.DaysOld,
 		&i.AgencyID,
 		&i.BureauCode,
-		&i.DaysOld,
-		&i.AbsAmount,
-		&i.AgingCategory,
-		&i.DaysOpenToPfs,
-		&i.DaysPfsToComplete,
-		&i.DaysComplete,
 	)
 	return i, err
 }
 
 const getActiveChargebackByID = `-- name: GetActiveChargebackByID :one
-SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code, days_old, abs_amount, aging_category, days_open_to_pfs, days_pfs_to_complete, days_complete FROM active_chargebacks_with_vendor_info
+SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active, days_old, agency_id, bureau_code FROM active_chargebacks_with_vendor_info
 WHERE id = $1
 `
 
@@ -88,6 +80,7 @@ func (q *Queries) GetActiveChargebackByID(ctx context.Context, id int64) (Active
 	var i ActiveChargebacksWithVendorInfo
 	err := row.Scan(
 		&i.ID,
+		&i.ReportingSource,
 		&i.Fund,
 		&i.BusinessLine,
 		&i.Region,
@@ -99,6 +92,7 @@ func (q *Queries) GetActiveChargebackByID(ctx context.Context, id int64) (Active
 		&i.Title,
 		&i.Alc,
 		&i.CustomerTas,
+		&i.TaskSubtask,
 		&i.ClassID,
 		&i.CustomerName,
 		&i.OrgCode,
@@ -111,7 +105,6 @@ func (q *Queries) GetActiveChargebackByID(ctx context.Context, id int64) (Active
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -119,26 +112,18 @@ func (q *Queries) GetActiveChargebackByID(ctx context.Context, id int64) (Active
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsActive,
+		&i.DaysOld,
 		&i.AgencyID,
 		&i.BureauCode,
-		&i.DaysOld,
-		&i.AbsAmount,
-		&i.AgingCategory,
-		&i.DaysOpenToPfs,
-		&i.DaysPfsToComplete,
-		&i.DaysComplete,
 	)
 	return i, err
 }
 
 const getActiveDelinquencyByBusinessKey = `-- name: GetActiveDelinquencyByBusinessKey :one
-SELECT id, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, current_status, document_number, vendor_code, collection_due_date, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, agency_id, bureau_code, days_old, aging_category, abs_amount FROM active_nonipac_with_vendor_info
+SELECT id, reporting_source, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, document_number, vendor_code, collection_due_date, current_status, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, is_active, days_old, agency_id, bureau_code FROM active_nonipac_with_vendor_info
 WHERE document_number = $1
 `
 
@@ -148,6 +133,7 @@ func (q *Queries) GetActiveDelinquencyByBusinessKey(ctx context.Context, documen
 	var i ActiveNonipacWithVendorInfo
 	err := row.Scan(
 		&i.ID,
+		&i.ReportingSource,
 		&i.BusinessLine,
 		&i.BilledTotalAmount,
 		&i.PrincipleAmount,
@@ -163,10 +149,10 @@ func (q *Queries) GetActiveDelinquencyByBusinessKey(ctx context.Context, documen
 		&i.Vendor,
 		&i.DebtAppealForbearance,
 		&i.Statement,
-		&i.CurrentStatus,
 		&i.DocumentNumber,
 		&i.VendorCode,
 		&i.CollectionDueDate,
+		&i.CurrentStatus,
 		&i.PfsPoc,
 		&i.GsaPoc,
 		&i.CustomerPoc,
@@ -175,17 +161,16 @@ func (q *Queries) GetActiveDelinquencyByBusinessKey(ctx context.Context, documen
 		&i.ReconciledDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsActive,
+		&i.DaysOld,
 		&i.AgencyID,
 		&i.BureauCode,
-		&i.DaysOld,
-		&i.AgingCategory,
-		&i.AbsAmount,
 	)
 	return i, err
 }
 
 const getActiveDelinquencyByID = `-- name: GetActiveDelinquencyByID :one
-SELECT id, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, current_status, document_number, vendor_code, collection_due_date, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, agency_id, bureau_code, days_old, aging_category, abs_amount FROM active_nonipac_with_vendor_info
+SELECT id, reporting_source, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, document_number, vendor_code, collection_due_date, current_status, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, is_active, days_old, agency_id, bureau_code FROM active_nonipac_with_vendor_info
 WHERE id = $1
 `
 
@@ -195,6 +180,7 @@ func (q *Queries) GetActiveDelinquencyByID(ctx context.Context, id int64) (Activ
 	var i ActiveNonipacWithVendorInfo
 	err := row.Scan(
 		&i.ID,
+		&i.ReportingSource,
 		&i.BusinessLine,
 		&i.BilledTotalAmount,
 		&i.PrincipleAmount,
@@ -210,10 +196,10 @@ func (q *Queries) GetActiveDelinquencyByID(ctx context.Context, id int64) (Activ
 		&i.Vendor,
 		&i.DebtAppealForbearance,
 		&i.Statement,
-		&i.CurrentStatus,
 		&i.DocumentNumber,
 		&i.VendorCode,
 		&i.CollectionDueDate,
+		&i.CurrentStatus,
 		&i.PfsPoc,
 		&i.GsaPoc,
 		&i.CustomerPoc,
@@ -222,17 +208,16 @@ func (q *Queries) GetActiveDelinquencyByID(ctx context.Context, id int64) (Activ
 		&i.ReconciledDate,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.IsActive,
+		&i.DaysOld,
 		&i.AgencyID,
 		&i.BureauCode,
-		&i.DaysOld,
-		&i.AgingCategory,
-		&i.AbsAmount,
 	)
 	return i, err
 }
 
 const getChargebackForUpdate = `-- name: GetChargebackForUpdate :one
-SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, is_active FROM chargeback
+SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active FROM chargeback
 WHERE id = $1 LIMIT 1
 `
 
@@ -267,7 +252,6 @@ func (q *Queries) GetChargebackForUpdate(ctx context.Context, id int64) (Chargeb
 		&i.Vendor,
 		&i.ArticlesServices,
 		&i.CurrentStatus,
-		&i.IssueInResearchDate,
 		&i.ReasonCode,
 		&i.Action,
 		&i.AlcToRebill,
@@ -275,10 +259,6 @@ func (q *Queries) GetChargebackForUpdate(ctx context.Context, id int64) (Chargeb
 		&i.LineOfAccountingRebill,
 		&i.SpecialInstruction,
 		&i.NewIpacDocumentRef,
-		&i.PfsCompletionDate,
-		&i.ReconciliationDate,
-		&i.ChargebackCount,
-		&i.PassedToPsf,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.IsActive,
@@ -352,7 +332,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const listActiveChargebacks = `-- name: ListActiveChargebacks :many
-SELECT id, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, issue_in_research_date, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, pfs_completion_date, reconciliation_date, chargeback_count, passed_to_psf, created_at, updated_at, agency_id, bureau_code, days_old, abs_amount, aging_category, days_open_to_pfs, days_pfs_to_complete, days_complete, count(*) OVER() AS total_count
+SELECT id, reporting_source, fund, business_line, region, location_system, program, al_num, source_num, agreement_num, title, alc, customer_tas, task_subtask, class_id, customer_name, org_code, document_date, accomp_date, assigned_rebill_drn, chargeback_amount, statement, bd_doc_num, vendor, articles_services, current_status, reason_code, action, alc_to_rebill, tas_to_rebill, line_of_accounting_rebill, special_instruction, new_ipac_document_ref, created_at, updated_at, is_active, days_old, agency_id, bureau_code, count(*) OVER() AS total_count
 FROM active_chargebacks_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
@@ -365,53 +345,46 @@ type ListActiveChargebacksParams struct {
 }
 
 type ListActiveChargebacksRow struct {
-	ID                     int64                    `json:"id"`
-	Fund                   ChargebackFund           `json:"fund"`
-	BusinessLine           ChargebackBusinessLine   `json:"business_line"`
-	Region                 int16                    `json:"region"`
-	LocationSystem         pgtype.Text              `json:"location_system"`
-	Program                string                   `json:"program"`
-	AlNum                  int16                    `json:"al_num"`
-	SourceNum              string                   `json:"source_num"`
-	AgreementNum           pgtype.Text              `json:"agreement_num"`
-	Title                  pgtype.Text              `json:"title"`
-	Alc                    string                   `json:"alc"`
-	CustomerTas            string                   `json:"customer_tas"`
-	ClassID                pgtype.Text              `json:"class_id"`
-	CustomerName           string                   `json:"customer_name"`
-	OrgCode                string                   `json:"org_code"`
-	DocumentDate           pgtype.Date              `json:"document_date"`
-	AccompDate             pgtype.Date              `json:"accomp_date"`
-	AssignedRebillDrn      pgtype.Text              `json:"assigned_rebill_drn"`
-	ChargebackAmount       pgtype.Numeric           `json:"chargeback_amount"`
-	Statement              string                   `json:"statement"`
-	BdDocNum               string                   `json:"bd_doc_num"`
-	Vendor                 string                   `json:"vendor"`
-	ArticlesServices       pgtype.Text              `json:"articles_services"`
-	CurrentStatus          CdmsStatus               `json:"current_status"`
-	IssueInResearchDate    pgtype.Date              `json:"issue_in_research_date"`
-	ReasonCode             NullChargebackReasonCode `json:"reason_code"`
-	Action                 NullChargebackAction     `json:"action"`
-	AlcToRebill            pgtype.Text              `json:"alc_to_rebill"`
-	TasToRebill            pgtype.Text              `json:"tas_to_rebill"`
-	LineOfAccountingRebill pgtype.Text              `json:"line_of_accounting_rebill"`
-	SpecialInstruction     pgtype.Text              `json:"special_instruction"`
-	NewIpacDocumentRef     pgtype.Text              `json:"new_ipac_document_ref"`
-	PfsCompletionDate      pgtype.Date              `json:"pfs_completion_date"`
-	ReconciliationDate     pgtype.Date              `json:"reconciliation_date"`
-	ChargebackCount        pgtype.Int2              `json:"chargeback_count"`
-	PassedToPsf            pgtype.Date              `json:"passed_to_psf"`
-	CreatedAt              pgtype.Timestamptz       `json:"created_at"`
-	UpdatedAt              pgtype.Timestamptz       `json:"updated_at"`
-	AgencyID               string                   `json:"agency_id"`
-	BureauCode             string                   `json:"bureau_code"`
-	DaysOld                interface{}              `json:"days_old"`
-	AbsAmount              decimal.Decimal          `json:"abs_amount"`
-	AgingCategory          string                   `json:"aging_category"`
-	DaysOpenToPfs          pgtype.Int4              `json:"days_open_to_pfs"`
-	DaysPfsToComplete      pgtype.Int4              `json:"days_pfs_to_complete"`
-	DaysComplete           pgtype.Int4              `json:"days_complete"`
-	TotalCount             int64                    `json:"total_count"`
+	ID                     int64                     `json:"id"`
+	ReportingSource        ChargebackReportingSource `json:"reporting_source"`
+	Fund                   ChargebackFund            `json:"fund"`
+	BusinessLine           ChargebackBusinessLine    `json:"business_line"`
+	Region                 int16                     `json:"region"`
+	LocationSystem         pgtype.Text               `json:"location_system"`
+	Program                string                    `json:"program"`
+	AlNum                  int16                     `json:"al_num"`
+	SourceNum              string                    `json:"source_num"`
+	AgreementNum           pgtype.Text               `json:"agreement_num"`
+	Title                  pgtype.Text               `json:"title"`
+	Alc                    string                    `json:"alc"`
+	CustomerTas            string                    `json:"customer_tas"`
+	TaskSubtask            string                    `json:"task_subtask"`
+	ClassID                pgtype.Text               `json:"class_id"`
+	CustomerName           string                    `json:"customer_name"`
+	OrgCode                string                    `json:"org_code"`
+	DocumentDate           pgtype.Date               `json:"document_date"`
+	AccompDate             pgtype.Date               `json:"accomp_date"`
+	AssignedRebillDrn      pgtype.Text               `json:"assigned_rebill_drn"`
+	ChargebackAmount       pgtype.Numeric            `json:"chargeback_amount"`
+	Statement              string                    `json:"statement"`
+	BdDocNum               string                    `json:"bd_doc_num"`
+	Vendor                 string                    `json:"vendor"`
+	ArticlesServices       pgtype.Text               `json:"articles_services"`
+	CurrentStatus          CdmsStatus                `json:"current_status"`
+	ReasonCode             NullChargebackReasonCode  `json:"reason_code"`
+	Action                 NullChargebackAction      `json:"action"`
+	AlcToRebill            pgtype.Text               `json:"alc_to_rebill"`
+	TasToRebill            pgtype.Text               `json:"tas_to_rebill"`
+	LineOfAccountingRebill pgtype.Text               `json:"line_of_accounting_rebill"`
+	SpecialInstruction     pgtype.Text               `json:"special_instruction"`
+	NewIpacDocumentRef     pgtype.Text               `json:"new_ipac_document_ref"`
+	CreatedAt              pgtype.Timestamptz        `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz        `json:"updated_at"`
+	IsActive               bool                      `json:"is_active"`
+	DaysOld                interface{}               `json:"days_old"`
+	AgencyID               string                    `json:"agency_id"`
+	BureauCode             string                    `json:"bureau_code"`
+	TotalCount             int64                     `json:"total_count"`
 }
 
 // //go:generate mockery --name Querier --output ./mocks --outpkg mocks
@@ -428,6 +401,7 @@ func (q *Queries) ListActiveChargebacks(ctx context.Context, arg ListActiveCharg
 		var i ListActiveChargebacksRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ReportingSource,
 			&i.Fund,
 			&i.BusinessLine,
 			&i.Region,
@@ -439,6 +413,7 @@ func (q *Queries) ListActiveChargebacks(ctx context.Context, arg ListActiveCharg
 			&i.Title,
 			&i.Alc,
 			&i.CustomerTas,
+			&i.TaskSubtask,
 			&i.ClassID,
 			&i.CustomerName,
 			&i.OrgCode,
@@ -451,7 +426,6 @@ func (q *Queries) ListActiveChargebacks(ctx context.Context, arg ListActiveCharg
 			&i.Vendor,
 			&i.ArticlesServices,
 			&i.CurrentStatus,
-			&i.IssueInResearchDate,
 			&i.ReasonCode,
 			&i.Action,
 			&i.AlcToRebill,
@@ -459,20 +433,12 @@ func (q *Queries) ListActiveChargebacks(ctx context.Context, arg ListActiveCharg
 			&i.LineOfAccountingRebill,
 			&i.SpecialInstruction,
 			&i.NewIpacDocumentRef,
-			&i.PfsCompletionDate,
-			&i.ReconciliationDate,
-			&i.ChargebackCount,
-			&i.PassedToPsf,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsActive,
+			&i.DaysOld,
 			&i.AgencyID,
 			&i.BureauCode,
-			&i.DaysOld,
-			&i.AbsAmount,
-			&i.AgingCategory,
-			&i.DaysOpenToPfs,
-			&i.DaysPfsToComplete,
-			&i.DaysComplete,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
@@ -486,7 +452,7 @@ func (q *Queries) ListActiveChargebacks(ctx context.Context, arg ListActiveCharg
 }
 
 const listActiveDelinquencies = `-- name: ListActiveDelinquencies :many
-SELECT id, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, current_status, document_number, vendor_code, collection_due_date, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, agency_id, bureau_code, days_old, aging_category, abs_amount, count(*) OVER() AS total_count
+SELECT id, reporting_source, business_line, billed_total_amount, principle_amount, interest_amount, penalty_amount, administration_charges_amount, debit_outstanding_amount, credit_total_amount, credit_outstanding_amount, title, document_date, address_code, vendor, debt_appeal_forbearance, statement, document_number, vendor_code, collection_due_date, current_status, pfs_poc, gsa_poc, customer_poc, pfs_contacts, open_date, reconciled_date, created_at, updated_at, is_active, days_old, agency_id, bureau_code, count(*) OVER() AS total_count
 FROM active_nonipac_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
@@ -500,6 +466,7 @@ type ListActiveDelinquenciesParams struct {
 
 type ListActiveDelinquenciesRow struct {
 	ID                          int64                  `json:"id"`
+	ReportingSource             NonipacReportingSource `json:"reporting_source"`
 	BusinessLine                ChargebackBusinessLine `json:"business_line"`
 	BilledTotalAmount           pgtype.Numeric         `json:"billed_total_amount"`
 	PrincipleAmount             pgtype.Numeric         `json:"principle_amount"`
@@ -515,10 +482,10 @@ type ListActiveDelinquenciesRow struct {
 	Vendor                      string                 `json:"vendor"`
 	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
 	Statement                   string                 `json:"statement"`
-	CurrentStatus               CdmsStatus             `json:"current_status"`
 	DocumentNumber              string                 `json:"document_number"`
 	VendorCode                  string                 `json:"vendor_code"`
 	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
 	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
 	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
 	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`
@@ -527,11 +494,10 @@ type ListActiveDelinquenciesRow struct {
 	ReconciledDate              pgtype.Date            `json:"reconciled_date"`
 	CreatedAt                   pgtype.Timestamptz     `json:"created_at"`
 	UpdatedAt                   pgtype.Timestamptz     `json:"updated_at"`
+	IsActive                    bool                   `json:"is_active"`
+	DaysOld                     interface{}            `json:"days_old"`
 	AgencyID                    string                 `json:"agency_id"`
 	BureauCode                  string                 `json:"bureau_code"`
-	DaysOld                     interface{}            `json:"days_old"`
-	AgingCategory               string                 `json:"aging_category"`
-	AbsAmount                   decimal.Decimal        `json:"abs_amount"`
 	TotalCount                  int64                  `json:"total_count"`
 }
 
@@ -548,6 +514,7 @@ func (q *Queries) ListActiveDelinquencies(ctx context.Context, arg ListActiveDel
 		var i ListActiveDelinquenciesRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ReportingSource,
 			&i.BusinessLine,
 			&i.BilledTotalAmount,
 			&i.PrincipleAmount,
@@ -563,10 +530,10 @@ func (q *Queries) ListActiveDelinquencies(ctx context.Context, arg ListActiveDel
 			&i.Vendor,
 			&i.DebtAppealForbearance,
 			&i.Statement,
-			&i.CurrentStatus,
 			&i.DocumentNumber,
 			&i.VendorCode,
 			&i.CollectionDueDate,
+			&i.CurrentStatus,
 			&i.PfsPoc,
 			&i.GsaPoc,
 			&i.CustomerPoc,
@@ -575,11 +542,10 @@ func (q *Queries) ListActiveDelinquencies(ctx context.Context, arg ListActiveDel
 			&i.ReconciledDate,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.IsActive,
+			&i.DaysOld,
 			&i.AgencyID,
 			&i.BureauCode,
-			&i.DaysOld,
-			&i.AgingCategory,
-			&i.AbsAmount,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err
