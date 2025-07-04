@@ -38,9 +38,9 @@ func LoadConfig() (*Config, error) {
 		return nil, fmt.Errorf("GCS_BUCKET_NAME environment variable not set")
 	}
 
-	SentryDSN := os.Getenv("SentryDSN")
+	SentryDSN := os.Getenv("SENTRY_DSN")
 	if SentryDSN == "" {
-		return nil, fmt.Errorf("SentryDSN environment variable not set")
+		return nil, fmt.Errorf("SENTRY_DSN environment variable not set")
 	}
 
 	return &Config{
