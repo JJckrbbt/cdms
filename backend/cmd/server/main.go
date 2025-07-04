@@ -201,8 +201,13 @@ func main() {
 	})
 
 	// 9. Start the HTTP server.
-	port := ":8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	appLogger.Info("HTTP Server starting on port", "port", port)
+
 	// e.Start blocks until the server is shut down or an error occurs.
 	if err := e.Start(port); err != nil && err != http.ErrServerClosed {
 		// Only log fatal if it's not a graceful shutdown error.
