@@ -113,8 +113,9 @@ export function DashboardPage() {
             <CardTitle>Chargeback Trends</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
+            <Table></Table>
           </CardContent>
         </Card>
       </div>
     </div>
+  )
