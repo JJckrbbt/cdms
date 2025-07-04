@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/StatCard";
-// FIXED: Removed the unused 'DollarSign' import
-import { Scale, ReceiptText, TrendingUp, TrendingDown, Hourglass } from "lucide-react";
+import { Scale, ReceiptText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
@@ -98,14 +97,12 @@ export function DashboardPage() {
           title="Total Delinquencies"
           value={totalDelinquencies !== null ? totalDelinquencies.toString() : "Loading..."}
           icon={<Scale className="h-4 w-4 text-muted-foreground" />}
-          // FIXED: Added the required description prop
           description="Total number of active delinquencies"
         />
         <StatCard
           title="Total Chargebacks"
           value={totalChargebacks !== null ? totalChargebacks.toString() : "Loading..."}
           icon={<ReceiptText className="h-4 w-4 text-muted-foreground" />}
-          // FIXED: Added the required description prop
           description="Total number of active chargebacks"
         />
       </div>
@@ -117,50 +114,3 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Metric</TableHead>
-                  {windows.map(w => <TableHead key={w} className="text-right">{timeWindowLabels[w]}</TableHead>)}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tableData.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{row[0]}</TableCell>
-                    {row.slice(1).map((cell, j) => <TableCell key={j} className="text-right">{String(cell)}</TableCell>)}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Status Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chargebackStats.status_summary.map(item => (
-                  <TableRow key={item.current_status}>
-                    <TableCell>{item.current_status}</TableCell>
-                    <TableCell className="text-right">{parseInt(item.status_count).toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
