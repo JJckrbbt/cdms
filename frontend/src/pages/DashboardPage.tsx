@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/StatCard";
-import { DollarSign, Scale, ReceiptText, TrendingUp, TrendingDown, Hourglass } from "lucide-react";
+// FIXED: Removed the unused 'DollarSign' import
+import { Scale, ReceiptText, TrendingUp, TrendingDown, Hourglass } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
@@ -32,7 +33,6 @@ interface CombinedChargebackStats {
   };
 }
 
-// FIXED: Create a specific type for the time window keys
 type TimeWindowKey = keyof CombinedChargebackStats['time_windows'];
 
 // --- Component ---
@@ -82,7 +82,6 @@ export function DashboardPage() {
   const windows = ["7d", "14d", "21d", "28d"];
   const timeWindowLabels: Record<string, string> = { "7d": "Last 7 Days", "14d": "Last 14 Days", "21d": "Last 21 Days", "28d": "Last 28 Days" };
 
-  // FIXED: All instances of `w` are now cast to our new `TimeWindowKey` type
   const tableData = [
     ["New Items", ...windows.map(w => chargebackStats.time_windows[w as TimeWindowKey].new_items_count.toLocaleString())],
     ["Value of New Items", ...windows.map(w => formatCurrency(parseFloat(chargebackStats.time_windows[w as TimeWindowKey].new_items_value)))],
@@ -99,13 +98,16 @@ export function DashboardPage() {
           title="Total Delinquencies"
           value={totalDelinquencies !== null ? totalDelinquencies.toString() : "Loading..."}
           icon={<Scale className="h-4 w-4 text-muted-foreground" />}
+          // FIXED: Added the required description prop
+          description="Total number of active delinquencies"
         />
         <StatCard
           title="Total Chargebacks"
           value={totalChargebacks !== null ? totalChargebacks.toString() : "Loading..."}
           icon={<ReceiptText className="h-4 w-4 text-muted-foreground" />}
+          // FIXED: Added the required description prop
+          description="Total number of active chargebacks"
         />
-        {/* Additional stat cards can go here */}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
