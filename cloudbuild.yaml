@@ -69,7 +69,7 @@ steps:
         DB_URL=$(gcloud secrets versions access latest --secret=cdms-database-url --project=${PROJECT_ID})
         /root/go/bin/goose -dir "backend/sql/schema" postgres "$$DB_URL" up
 
-    serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/cdms-builder-sa@${PROJECT_ID}.iam.gserviceaccount.com'
+serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/cdms-builder-sa@${PROJECT_ID}.iam.gserviceaccount.com'
 
   # Step 7: Deploy the new image to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
