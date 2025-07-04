@@ -114,3 +114,7 @@ export function DashboardPage() {
           </CardHeader>
           <CardContent>
             <Table>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
