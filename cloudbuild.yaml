@@ -82,6 +82,7 @@ steps:
       - '--region=us-central1'
       - '--platform=managed'
       - '--allow-unauthenticated'
+      - '--cpu-boost'
       - '--port=8080'
       - '--update-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
       - '--set-env-vars=GCS_BUCKET_NAME=your-cdms-report-bucket-name'
