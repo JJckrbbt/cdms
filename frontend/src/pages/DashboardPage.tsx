@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { StatCard } from "@/components/StatCard";
+// FIXED: Removed the unused 'TrendingUp', 'TrendingDown', and 'Hourglass' imports
 import { Scale, ReceiptText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -113,10 +114,51 @@ export function DashboardPage() {
             <CardTitle>Chargeback Trends</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table></Table>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Metric</TableHead>
+                  {windows.map(w => <TableHead key={w} className="text-right">{timeWindowLabels[w]}</TableHead>)}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tableData.map((row, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-medium">{row[0]}</TableCell>
+                    {row.slice(1).map((cell, j) => <TableCell key={j} className="text-right">{String(cell)}</TableCell>)}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Status Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {chargebackStats.status_summary.map(item => (
+                  <TableRow key={item.current_status}>
+                    <TableCell>{item.current_status}</TableCell>
+                    <TableCell className="text-right">{parseInt(item.status_count).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
