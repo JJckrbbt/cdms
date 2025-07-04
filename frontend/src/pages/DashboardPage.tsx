@@ -119,3 +119,4 @@ export function DashboardPage() {
       </div>
     </div>
   )
+}
