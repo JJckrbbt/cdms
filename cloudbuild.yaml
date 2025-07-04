@@ -46,7 +46,7 @@ steps:
     waitFor: ['build-backend-image']
 
   # Step 6: Run DB Migratios
-  - name: 'golang:1.24-alpine'
+  - name: 'gcr.io/google-appengine/exec-wrapper'
     id:   'run-db-migrations'
     entrypoint: 'sh'
 
@@ -54,22 +54,22 @@ steps:
     args:
       - '-c'
       - |
-        # Download and run the Cloud SQL Auth Proxy
-        wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy
-        chmod +x /usr/local/bin/cloud-sql-proxy
-        # Start the proxy in the background
-        /usr/local/bin/cloud-sql-proxy --quiet --private-ip cdms-463617:us-central1:cdms-demo &
+       # Start the proxy in the background
+        /build/cloud-sql-proxy cdms-463617:us-central1:cdms-demo &
         # Give the proxy a second to start
-        sleep 2
+        sleep 5
 
-        # Install goose
+        # Install Go & goose
+        apk add --no-cache go
         go install github.com/pressly/goose/v3/cmd/goose@latest
 
         # Run the migrations
         # The DATABASE_URL is securely accessed from Secret Manager
         # The host is '127.0.0.1' because we're connecting through the proxy
         DB_URL=$(gcloud secrets versions access latest --secret=cdms-database-url --project=${PROJECT_ID})
-        goose -dir "backend/sql/schema" postgres "$${DB_URL//cloudsql*/127.0.0.1}" up
+        /root/go/bin/goose -dir "backend/sql/schema" postgres "$$DB_URL" up
+
+    serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/cdms-builder-sa@${PROJECT_ID}.iam.gserviceaccount.com'
 
   # Step 7: Deploy the new image to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
