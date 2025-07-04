@@ -84,6 +84,7 @@ steps:
       - '--allow-unauthenticated'
       - '--cpu-boost'
       - '--port=8080'
+      - '--add-cloudsql-instances=cdms-463617:us-central1:cdms'
       - '--set-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
       - '--set-env-vars=GCS_BUCKET_NAME=your-cdms-report-bucket-name'
     waitFor: ['push-backend-image']
