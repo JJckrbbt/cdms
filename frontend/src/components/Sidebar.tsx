@@ -4,7 +4,8 @@ import AppLogo from "@/assets/CDMSTransparent.png";
 import { Link } from "react-router-dom";
 
 interface SidebarProps {
-  onUploadReportClick: () => void;
+  // CHANGED: Made this prop optional with '?'
+  onUploadReportClick?: () => void;
 }
 
 export function Sidebar({ onUploadReportClick }: SidebarProps) {
@@ -44,6 +45,7 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
       {/* Admin and Upload Navigation */}
       <div className="pt-4 border-t">
         <nav className="flex flex-col gap-2">
+          {/* This button now correctly uses the optional prop */}
           <Button variant="ghost" className="justify-start gap-2" onClick={onUploadReportClick}>
             <Upload className="h-4 w-4" />
             Upload Report
