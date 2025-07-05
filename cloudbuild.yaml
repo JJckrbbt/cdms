@@ -1,5 +1,5 @@
 steps:
-  # Steps 1 & 2: Frontend build (No changes)
+  # Steps 1 & 2: Frontend build
   - name: 'gcr.io/cloud-builders/npm'
     id: 'npm-install'
     args: ['install']
@@ -10,14 +10,14 @@ steps:
     dir: 'frontend'
     waitFor: ['npm-install']
 
-  # Step 3: Deploy Frontend to GCS (No changes)
+  # Step 3: Deploy Frontend to GCS
   - name: 'gcr.io/cloud-builders/gsutil'
     id: 'deploy-frontend'
     args: ['-m', 'rsync', '-r', '-c', '-d', './dist', 'gs://cdms.jjckrbbt.dev']
     dir: 'frontend'
     waitFor: ['build-frontend']
 
-  # Step 4 & 5: Build and push the main application image (No changes)
+  # Step 4 & 5: Build and push the main application image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-backend-image'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}', '.', '-f', 'Dockerfile']
@@ -27,48 +27,52 @@ steps:
     id: 'push-backend-image'
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}']
     waitFor: ['build-backend-image']
+  
+  # Step 6: Build our dedicated migrator image using Dockerfile.migrate (This step was missing)
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-migrator'
+    args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator:latest', '.', '-f', 'Dockerfile.migrate']
+    dir: 'backend'
 
-  # Step 6: Run DB Migrations using the official Cloud SQL Auth Proxy image
-  - name: 'gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.1'
-    id: 'run-db-migrations'
-    waitFor: ['push-backend-image']
-    entrypoint: 'sh'
-    args:
-      - '-c'
-      - |
-        # This image has the proxy. Start it and wait for it to be ready.
-        /cloud_sql_proxy cdms-463617:us-central1:cdms &
-        sleep 5
-
-        # The image doesn't have go, so we download and run a pre-compiled goose binary
-        wget https://github.com/pressly/goose/releases/latest/download/goose_linux_amd64 -O /goose
-        chmod +x /goose
-
-        # Run the migrations using the full connection string from the secret
-        /goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
-    secretEnv: ['DB_SECRET']
-
- # Step 7: Run DB Migrations using our custom migrator image
+  # Step 7: Run DB Migrations using our custom migrator image
   - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
     id: 'run-db-migrations'
+    # FIXED: The waitFor now correctly references the build-migrator step
     waitFor: ['build-migrator']
     entrypoint: 'sh'
     args:
       - '-c'
       - |
-        # CORRECTED: Explicitly tell the proxy to use a Unix socket
-        # The /cloudsql directory is standard for this purpose.
-        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql cdms-463617:us-central1:cdms &
+        # Start the proxy in the background for a Unix socket connection
+        /usr/local/bin/cloud_sql_proxy -u /cloudsql cdms-463617:us-central1:cdms &
         
-        # Wait for the socket file to be created by the proxy
+        # Wait for the proxy to be ready
         sleep 10
         
-        # Run goose with the full DB URL pointing to the socket path.
-        # This now matches where the proxy is creating the connection.
+        # Run the migrations using the full connection string from the secret
+        # The path /go/bin/goose is correct because that's where `go install` puts it inside our custom image
         /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
-# Top-level key to make the secret available to the entire build process.
+  # Step 8: Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-backend'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'cdms-backend'
+      - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--cpu-boost'
+      - '--add-cloudsql-instances=cdms-463617:us-central1:cdms'
+      - '--set-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
+      - '--set-env-vars=GCS_BUCKET_NAME=cdms.jjckrbbt.dev'
+    waitFor: ['run-db-migrations']
+
+# This top-level key makes the secret available to the entire build process.
 availableSecrets:
   secretManager:
   - versionName: projects/${PROJECT_ID}/secrets/cdms-database-url/versions/latest
