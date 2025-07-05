@@ -1,3 +1,7 @@
+options:
+  pool:
+    name: 'projects/cdms-463617/locations/us-central1/workerPools/cdms-private-pool'
+
 steps:
   # Steps 1-5 build the frontend, deploy it, and build the backend image
   - name: 'gcr.io/cloud-builders/npm'
