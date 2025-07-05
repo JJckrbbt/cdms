@@ -38,14 +38,13 @@ steps:
     args:
       - '-c'
       - |
-        # CORRECTED PROXY COMMAND:
-        # Added the --private-ip flag to connect securely over the internal network.
-        /usr/local/bin/cloud_sql_proxy --private-ip cdms-463617:us-central1:cdms &
+        # CORRECTED: Start the proxy and explicitly tell it to use the Unix socket
+        /usr/local/bin/cloud_sql_proxy -u /cloudsql cdms-463617:us-central1:cdms &
         
-        # Wait for the proxy to be ready
+        # Wait for the socket to be created
         sleep 10
         
-        # Run the migrations using the full connection string from the secret
+        # Run goose with the connection string pointing to the socket
         /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
