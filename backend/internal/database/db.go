@@ -8,16 +8,14 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool" // NEW: pgx connection pool
-	"github.com/jackc/pgx/v5/stdlib"  // NEW: pgx adapter for database/sql
-	// REMOVED: _ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 // DBClient now holds both the standard DB handle and the native pgx pool.
-// This allows for maximum flexibility.
 type DBClient struct {
 	DB   *sql.DB
-	Pool *pgxpool.Pool // NEW: Native connection pool for high-performance operations
+	Pool *pgxpool.Pool
 }
 
 // ConnectDB is updated to establish a connection using pgxpool.
