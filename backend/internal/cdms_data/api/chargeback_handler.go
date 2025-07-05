@@ -82,8 +82,9 @@ type CreateChargebackRequest struct {
 }
 
 type PaginatedChargebacksResponse struct {
-	TotalCount int64                         `json:"total_count"`
-	Data       []db.ListActiveChargebacksRow `json:"data"`
+	TotalCount           int64                         `json:"total_count"`
+	TotalChargebackValue decimal.Decimal               `json:"total_chargeback_value"`
+	Data                 []db.ListActiveChargebacksRow `json:"data"`
 }
 
 type ChargebackHandler struct {
@@ -210,12 +211,15 @@ func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargebacks")
 	}
 	var totalCount int64
+	var totalValue decimal.Decimal
 	if len(chargebacks) > 0 {
 		totalCount = chargebacks[0].TotalCount
+		totalValue = chargebacks[0].TotalChargebackAmountSum
 	}
 	response := PaginatedChargebacksResponse{
-		TotalCount: totalCount,
-		Data:       chargebacks,
+		TotalCount:           totalCount,
+		TotalChargebackValue: totalValue,
+		Data:                 chargebacks,
 	}
 
 	return c.JSON(http.StatusOK, response)

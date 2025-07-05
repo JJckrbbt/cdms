@@ -2,7 +2,8 @@
 -- name: ListActiveChargebacks :many
 -- Fetches a paginated list from the active_chargebacks_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT *, count(*) OVER() AS total_count
+SELECT *, count(*) OVER() AS total_count, 
+    SUM(chargeback_amount) OVER() AS total_chargeback_amount_sum
 FROM active_chargebacks_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
@@ -11,7 +12,8 @@ OFFSET $2;
 -- name: ListActiveDelinquencies :many
 -- Fetches a paginated list from the active_nonipac_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT *, count(*) OVER() AS total_count
+SELECT *, count(*) OVER() AS total_count,
+    SUM(total_billed_amount) OVER() AS total_billed_amount_sum
 FROM active_nonipac_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1

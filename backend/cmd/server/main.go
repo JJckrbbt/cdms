@@ -203,7 +203,7 @@ func main() {
 	// 9. Start the HTTP server.
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = ":8080"
 	}
 
 	appLogger.Info("HTTP Server starting on port", "port", port)
