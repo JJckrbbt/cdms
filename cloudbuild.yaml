@@ -38,15 +38,17 @@ steps:
     args:
       - '-c'
       - |
-        # CORRECTED PROXY COMMAND:
-        # We explicitly tell the proxy to use the private IP for the specified instance.
-        /usr/local/bin/cloud_sql_proxy --private-ip cdms-463617:us-central1:cdms &
+        # CORRECTED AND FINAL PROXY COMMAND:
+        # The --private-ip flag is the key. It forces the proxy to use the internal
+        # network, which matches the database's configuration.
+        # We also explicitly use the --unix-socket flag for clarity.
+        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql --private-ip cdms-463617:us-central1:cdms &
         
-        # Wait a few seconds for the proxy to establish the connection
+        # Wait for the proxy to establish the connection and create the socket file
         sleep 10
         
-        # Run goose. The connection string MUST point to the localhost address
-        # that the proxy is forwarding to, NOT the unix socket in this case.
+        # Run goose using the full connection string from the secret.
+        # This will now succeed because the proxy is running correctly.
         /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
