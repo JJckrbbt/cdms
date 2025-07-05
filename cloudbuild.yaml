@@ -34,7 +34,7 @@ steps:
     args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator:latest', '.', '-f', 'Dockerfile.migrate']
     dir: 'backend'
 
-# Step 7: Run DB Migrations using our custom migrator image
+  # Step 7: Run DB Migrations using our custom migrator image
   - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
     id: 'run-db-migrations'
     waitFor: ['build-migrator']
@@ -42,17 +42,16 @@ steps:
     args:
       - '-c'
       - |
-        # CORRECTED AND FINAL PROXY COMMAND:
-        # The --private-ip flag is the key. It forces the proxy to use the internal
-        # network, which matches the database's configuration.
-        # We also explicitly use the --unix-socket flag for clarity.
-        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql --private-ip cdms-463617:us-central1:cdms &
+        # FINAL FIX: Explicitly tell the proxy to use port 5432 for PostgreSQL
+        # The "?port=5432" is the key.
+        /usr/local/bin/cloud_sql_proxy \
+          --unix-socket /cloudsql \
+          "cdms-463617:us-central1:cdms?port=5432" &
         
-        # Wait for the proxy to establish the connection and create the socket file
+        # Wait for the proxy to establish the connection
         sleep 10
         
-        # Run goose using the full connection string from the secret.
-        # This will now succeed because the proxy is running correctly.
+        # Goose will now connect to a proxy that is correctly routed to your database.
         /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
