@@ -30,7 +30,7 @@ steps:
     args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator:latest', '.', '-f', 'Dockerfile.migrate']
     dir: 'backend'
 
-  # Step 7: Run DB Migrations using our custom migrator image
+# Step 7: Run DB Migrations using our custom migrator image
   - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
     id: 'run-db-migrations'
     waitFor: ['build-migrator']
@@ -38,10 +38,14 @@ steps:
     args:
       - '-c'
       - |
-        # Start the proxy, pointing it to the directory we created
-        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql cdms-463617:us-central1:cdms &
+        # CORRECTED PROXY COMMAND:
+        # Added the --private-ip flag to connect securely over the internal network.
+        /usr/local/bin/cloud_sql_proxy --private-ip cdms-463617:us-central1:cdms &
+        
+        # Wait for the proxy to be ready
         sleep 10
-        # Run goose with the full DB URL pointing to the socket path
+        
+        # Run the migrations using the full connection string from the secret
         /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
