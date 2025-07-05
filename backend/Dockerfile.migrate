@@ -11,8 +11,11 @@ RUN wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.
 # Install the goose migration tool
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 
-# Set the working directory for any commands that run in this container
+# FIXED: Create the directory the proxy needs to create its socket
+RUN mkdir /cloudsql
+
+# Set the working directory
 WORKDIR /workspace
 
-# The default command is a simple shell, ready to receive script args from Cloud Build
+# The entrypoint is a simple shell, ready to receive commands
 ENTRYPOINT ["/bin/sh"]
