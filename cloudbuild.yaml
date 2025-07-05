@@ -1,5 +1,4 @@
 steps:
-  # Steps 1-5: Frontend build, deploy, and backend build/push remain the same
   - name: 'gcr.io/cloud-builders/npm'
     id: 'npm-install'
     args: ['install']
@@ -24,33 +23,27 @@ steps:
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}']
     waitFor: ['build-backend-image']
 
-  # Step 6: Run DB Migrations (Corrected)
-  - name: 'golang:1.24-alpine' # Using a standard Go image
+  - name: 'gcr.io/cloud-builders/gcloud'
     id: 'run-db-migrations'
-    entrypoint: 'sh'
+    entrypoint: 'bash'
     waitFor: ['push-backend-image']
     args:
       - '-c'
       - |
-        # Install dependencies: wget for the proxy, and git for goose
-        apk add --no-cache wget git
+        # Start the proxy in the background. It will be ready to accept connections.
+        cloud_sql_proxy -p 127.0.0.1:5432 cdms-463617:us-central1:cdms &
+        # Give it a moment to establish the connection before proceeding
+        sleep 10
 
-        # Download and install the Cloud SQL Auth Proxy
-        wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64 -O /cloud_sql_proxy
-        chmod +x /cloud_sql_proxy
-        
-        # Start the proxy in the background to connect to our DB
-        ./cloud_sql_proxy cdms-463617:us-central1:cdms &
-        sleep 5
-
-        # Install goose
+        # Install goose (git is needed for this)
+        apk add --no-cache git go
         go install github.com/pressly/goose/v3/cmd/goose@latest
         
-        # Run the migrations using the secret
-        goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
+        # Run the migrations. The connection string now points to the local proxy port.
+        # The DB_SECRET should be in the format: "user=postgres password=YOUR_PASSWORD dbname=YOUR_DB"
+        /root/go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
-  # Step 7: Deploy to Cloud Run (No changes)
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'deploy-backend'
     args:
@@ -68,7 +61,6 @@ steps:
       - '--set-env-vars=GCS_BUCKET_NAME=cdms.jjckrbbt.dev'
     waitFor: ['run-db-migrations']
 
-# Top-level key to make the secret available to the build
 availableSecrets:
   secretManager:
   - versionName: projects/${PROJECT_ID}/secrets/cdms-database-url/versions/latest
