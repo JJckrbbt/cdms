@@ -48,23 +48,25 @@ steps:
         /goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
-  # Step 7: Deploy to Cloud Run (No changes)
-  - name: 'gcr.io/cloud-builders/gcloud'
-    id: 'deploy-backend'
+ # Step 7: Run DB Migrations using our custom migrator image
+  - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
+    id: 'run-db-migrations'
+    waitFor: ['build-migrator']
+    entrypoint: 'sh'
     args:
-      - 'run'
-      - 'deploy'
-      - 'cdms-backend'
-      - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
-      - '--region=us-central1'
-      - '--platform=managed'
-      - '--allow-unauthenticated'
-      - '--port=8080'
-      - '--cpu-boost'
-      - '--add-cloudsql-instances=cdms-463617:us-central1:cdms'
-      - '--set-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
-      - '--set-env-vars=GCS_BUCKET_NAME=cdms.jjckrbbt.dev'
-    waitFor: ['run-db-migrations']
+      - '-c'
+      - |
+        # CORRECTED: Explicitly tell the proxy to use a Unix socket
+        # The /cloudsql directory is standard for this purpose.
+        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql cdms-463617:us-central1:cdms &
+        
+        # Wait for the socket file to be created by the proxy
+        sleep 10
+        
+        # Run goose with the full DB URL pointing to the socket path.
+        # This now matches where the proxy is creating the connection.
+        /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
+    secretEnv: ['DB_SECRET']
 
 # Top-level key to make the secret available to the entire build process.
 availableSecrets:
