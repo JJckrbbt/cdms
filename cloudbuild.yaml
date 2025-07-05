@@ -34,7 +34,7 @@ steps:
     args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator:latest', '.', '-f', 'Dockerfile.migrate']
     dir: 'backend'
 
-  # Step 7: Run DB Migrations
+# Step 7: Run DB Migrations
   - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
     id: 'run-db-migrations'
     waitFor: ['build-migrator']
@@ -42,12 +42,12 @@ steps:
     args:
       - '-c'
       - |
-        # THE REAL FIX:
-        # Start the proxy and ONLY specify the Unix socket.
-        # This forces it to create the socket that goose is looking for.
-        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql cdms-463617:us-central1:cdms &
+        # THE DEFINITIVE COMMAND:
+        # 1. Use --private-ip to tell the proxy to connect to your DB's private IP.
+        # 2. Use --unix-socket to create the socket file that goose needs to connect.
+        /usr/local/bin/cloud_sql_proxy --private-ip --unix-socket /cloudsql cdms-463617:us-central1:cdms &
         
-        # Give the proxy a moment to start and create the socket file.
+        # Wait 10 seconds for the proxy to establish the connection.
         sleep 10
         
         # Now, goose will connect successfully.
