@@ -1,31 +1,82 @@
-version: "2"
-sql:
-  - schema:
-      - "sql/schema"
-      - "sql/internal-sql"
-    queries: "sql/queries"
-    engine: "postgresql"
-    gen:
-      go:
-        out: "internal/db"
-        sql_package: "pgx/v5"
-        emit_json_tags: true
-        emit_interface: true
-        overrides:
-          - column: "active_chargebacks_with_vendor_info.days_open_to_pfs"
-            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
-            nullable: true
-          - column: "active_chargebacks_with_vendor_info.days_pfs_to_complete"
-            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
-            nullable: true
-          - column: "active_chargebacks_with_vendor_info.days_complete"
-            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
-            nullable: true
-          - column: "active_nonipac_with_vendor_info.abs_amount"
-            go_type: "github.com/shopspring/decimal.Decimal"
-          - column: "active_chargebacks_with_vendor_info.abs_amount"
-            go_type: "github.com/shopspring/decimal.Decimal"
-          - db_type: "pg_catalog.int4"
-            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
-            nullable: true
- 
+steps:
+  # Steps 1 & 2: Frontend build
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'npm-install'
+    args: ['install']
+    dir: 'frontend'
+  - name: 'gcr.io/cloud-builders/npm'
+    id: 'build-frontend'
+    args: ['run', 'build']
+    dir: 'frontend'
+    waitFor: ['npm-install']
+
+  # Step 3: Deploy Frontend to GCS
+  - name: 'gcr.io/cloud-builders/gsutil'
+    id: 'deploy-frontend'
+    args: ['-m', 'rsync', '-r', '-c', '-d', './dist', 'gs://cdms.jjckrbbt.dev']
+    dir: 'frontend'
+    waitFor: ['build-frontend']
+
+  # Step 4: Build the Go application Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend-image'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}', '.', '-f', 'Dockerfile']
+    dir: 'backend'
+    waitFor: ['build-frontend']
+
+  # Step 5: Push the application image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend-image'
+    args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}']
+    waitFor: ['build-backend-image']
+  
+  # Step 6: Build our dedicated migrator image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-migrator'
+    args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator', '.', '-f', 'Dockerfile.migrate']
+    dir: 'backend'
+
+  # Step 7: Run DB Migrations using our custom migrator image
+  - name: 'gcr.io/${PROJECT_ID}/migrator'
+    id: 'run-db-migrations'
+    waitFor: ['build-migrator', 'push-backend-image']
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        # Start the proxy in the background
+        cloud_sql_proxy -p 127.0.0.1:5432 cdms-463617:us-central1:cdms &
+        # Wait for the proxy to be ready
+        sleep 10
+        # Run the migrations
+        goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
+    secretEnv: ['DB_SECRET']
+
+  # Step 8: Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'deploy-backend'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'cdms-backend'
+      - '--image=us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+      - '--region=us-central1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--port=8080'
+      - '--cpu-boost'
+      - '--add-cloudsql-instances=cdms-463617:us-central1:cdms'
+      - '--set-secrets=DATABASE_URL=cdms-database-url:latest,SENTRY_DSN=cdms-sentry-dsn:latest'
+      - '--set-env-vars=GCS_BUCKET_NAME=cdms.jjckrbbt.dev'
+    waitFor: ['run-db-migrations']
+
+availableSecrets:
+  secretManager:
+  - versionName: projects/${PROJECT_ID}/secrets/cdms-database-url/versions/latest
+    env: 'DB_SECRET'
+
+images:
+  - 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

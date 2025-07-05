@@ -1,0 +1,18 @@
+# Start from the official Go image, which has Go and apk
+FROM golang:1.24-alpine
+
+# Install git (for go install) and wget (for the proxy)
+RUN apk add --no-cache git wget
+
+# Download and install the Cloud SQL Auth Proxy
+RUN wget https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.1/cloud-sql-proxy.linux.amd64 -O /usr/local/bin/cloud-sql-proxy && \
+    chmod +x /usr/local/bin/cloud_sql_proxy
+
+# Install the goose migration tool
+RUN go install github.com/pressly/goose/v3/cmd/goose@latest
+
+# Set the working directory
+WORKDIR /workspace
+
+# The entrypoint is a simple shell, ready to receive commands
+ENTRYPOINT ["/bin/sh", "-c"]
