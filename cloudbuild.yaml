@@ -1,6 +1,6 @@
 options:
   pool:
-    name: 'projects/cdms-463617/locations/us-central1/workerPools/cdms-private-pool'
+    name: 'projects/cdms-463617/locations/us-central1/workerPools/cdms'
 
 steps:
   # Steps 1-5 build the frontend, deploy it, and build the backend image
