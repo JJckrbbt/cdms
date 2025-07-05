@@ -1,5 +1,5 @@
 steps:
-  # Steps 1-5 remain the same...
+  # Steps 1-5 build the frontend, deploy it, and build the backend image
   - name: 'gcr.io/cloud-builders/npm'
     id: 'npm-install'
     args: ['install']
@@ -24,30 +24,28 @@ steps:
     args: ['push', 'us-central1-docker.pkg.dev/${PROJECT_ID}/cdms-repo/cdms-backend:${SHORT_SHA}']
     waitFor: ['build-backend-image']
   
-# Step 6: Run DB Migrations using the official Cloud SQL Auth Proxy image
-  - name: 'gcr.io/cloud-sql-connectors/cloud-sql-proxy:2.10.1'
+  # Step 6: Build the dedicated migrator image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-migrator'
+    args: ['build', '-t', 'gcr.io/${PROJECT_ID}/migrator:latest', '.', '-f', 'Dockerfile.migrate']
+    dir: 'backend'
+
+  # Step 7: Run migrations using the custom image
+  - name: 'gcr.io/${PROJECT_ID}/migrator:latest'
     id: 'run-db-migrations'
-    waitFor: ['push-backend-image'] # Depends on the main app image push, but can run in parallel
+    waitFor: ['build-migrator']
     entrypoint: 'sh'
     args:
       - '-c'
       - |
-        # This image has the proxy. Start it in the background.
-        # This is the correct command to create the socket.
-        /cloud_sql_proxy cdms-463617:us-central1:cdms --unix-socket /cloudsql &
-        sleep 5
-
-        # This image does not have Go, so we download the pre-compiled goose binary.
-        # This is more reliable than installing from source.
-        wget https://github.com/pressly/goose/releases/latest/download/goose_linux_amd64 -O /goose
-        chmod +x /goose
-
-        # Run the migrations using the full connection string from the secret.
-        /goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
+        # Start the proxy and tell it where to create the socket
+        /usr/local/bin/cloud_sql_proxy --unix-socket /cloudsql cdms-463617:us-central1:cdms &
+        sleep 10
+        # Run the migrations
+        /go/bin/goose -dir "backend/sql/schema" postgres "$$DB_SECRET" up
     secretEnv: ['DB_SECRET']
 
-
-  # Step 7: Deploy to Cloud Run
+  # Step 8: Deploy the application
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'deploy-backend'
     args:
