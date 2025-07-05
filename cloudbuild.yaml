@@ -55,21 +55,16 @@ steps:
       - '-c'
       - |
        # Start the proxy in the background
-        /build/cloud-sql-proxy cdms-463617:us-central1:cdms-demo &
-        # Give the proxy a second to start
-        sleep 5
-
-        # Install Go & goose
         apk add --no-cache go
+        /build/cloud-sql-proxy cdms-463617:us-central1:cdms-demo &
+        sleep 5
         go install github.com/pressly/goose/v3/cmd/goose@latest
-
-        # Run the migrations
-        # The DATABASE_URL is securely accessed from Secret Manager
-        # The host is '127.0.0.1' because we're connecting through the proxy
         DB_URL=$(gcloud secrets versions access latest --secret=cdms-database-url --project=${PROJECT_ID})
         /root/go/bin/goose -dir "backend/sql/schema" postgres "$$DB_URL" up
-
-serviceAccount: 'projects/${PROJECT_ID}/serviceAccounts/cdms-builder-sa@${PROJECT_ID}.iam.gserviceaccount.com'
+    availableSecrets:
+      secretManager:
+        - versionName: projects/${PROJECT_ID}/secrets/cdms-database-url/versions/latest
+          env: 'DB_SECRET_URL'
 
   # Step 7: Deploy the new image to Cloud Run
   - name: 'gcr.io/cloud-builders/gcloud'
