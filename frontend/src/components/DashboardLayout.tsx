@@ -88,7 +88,7 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
           </div>
           </header>
 
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-y-auto">
           <div className="p-6 h-full">
             {children}
           </div>

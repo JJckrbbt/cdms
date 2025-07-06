@@ -9,9 +9,9 @@ import { formatCurrency } from "@/lib/utils";
 // --- Data Structures from API ---
 interface StatusSummary {
   current_status: string;
-  status_count: string;
-  total_value: string;
-  percentage_of_total: string;
+  status_count: number;
+  total_value: number;
+  percentage_of_total: number;
 }
 
 interface TimeWindowStats {
@@ -23,63 +23,59 @@ interface TimeWindowStats {
   completed_by_pfs: number;
 }
 
-interface CombinedChargebackStats {
-  status_summary: StatusSummary[];
-  time_windows: {
+interface AgingScheduleEntry {
+  business_line: string;
+  less_than_180_days_count: number;
+  less_than_180_days_value: string;
+  one_to_two_years_count: number;
+  one_to_two_years_value: string;
+  over_two_years_count: number;
+  over_two_years_value: string;
+  total_count: number;
+  total_value: string;
+}
+
+interface DashboardData {
+  chargeback_status_summary: StatusSummary[];
+  chargeback_time_windows: {
     "7d": TimeWindowStats;
     "14d": TimeWindowStats;
     "21d": TimeWindowStats;
     "28d": TimeWindowStats;
   };
+  nonipac_status_summary: StatusSummary[];
+  nonipac_aging_schedule: AgingScheduleEntry[];
 }
 
-type TimeWindowKey = keyof CombinedChargebackStats['time_windows'];
+type TimeWindowKey = keyof DashboardData['chargeback_time_windows'];
 
 // --- Component ---
 export function DashboardPage() {
-  const [totalDelinquencies, setTotalDelinquencies] = useState<number | null>(null);
-  const [totalChargebacks, setTotalChargebacks] = useState<number | null>(null);
-  const [totalChargebacksValue, setTotalChargebacksValue] = useState<number | null>(null);
-  const [totalDelinquenciesValue, setTotalDelinquenciesValue] = useState<number | null>(null);
-  const [chargebackStats, setChargebackStats] = useState<CombinedChargebackStats | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
-    const fetchTotals = async () => {
+    const fetchDashboardData = async () => {
       try {
-        const [delinquenciesResponse, chargebacksResponse] = await Promise.all([
-          fetch(`http://10.98.1.142:8080/api/delinquencies?limit=1&page=1`),
-          fetch(`http://10.98.1.142:8080/api/chargebacks?limit=1&page=1`),
-        ]);
-        const delinquenciesData = await delinquenciesResponse.json();
-        const chargebacksData = await chargebacksResponse.json();
-        if (delinquenciesData && typeof delinquenciesData.total_count === 'number') {
-          setTotalDelinquencies(delinquenciesData.total_count);
-        }
-        if (chargebacksData && typeof chargebacksData.total_count === 'number') {
-          setTotalChargebacks(chargebacksData.total_count);
-        }
-      } catch (error) {
-        console.error("Failed to fetch totals:", error);
-      }
-    };
-
-    const fetchChargebackStats = async () => {
-      try {
-        const response = await fetch(`http://10.98.1.142:8080/api/dashboard/chargeback-stats`);
+        const response = await fetch(`http://10.98.1.142:8080/api/dashboard`);
         const data = await response.json();
-        setChargebackStats(data);
+        setDashboardData(data);
       } catch (error) {
-        console.error("Failed to fetch chargeback stats:", error);
+        console.error("Failed to fetch dashboard data:", error);
       }
     };
 
-    fetchTotals();
-    fetchChargebackStats();
+    fetchDashboardData();
   }, []);
 
-  if (!chargebackStats) {
+  if (!dashboardData) {
     return <p>Loading dashboard...</p>;
   }
+
+  const totalChargebacks = dashboardData.chargeback_status_summary.reduce((sum, item) => sum + item.status_count, 0);
+  const totalChargebacksValue = dashboardData.chargeback_status_summary.reduce((sum, item) => sum + item.total_value, 0);
+
+  const totalDelinquencies = dashboardData.nonipac_status_summary.reduce((sum, item) => sum + item.status_count, 0);
+  const totalDelinquenciesValue = dashboardData.nonipac_status_summary.reduce((sum, item) => sum + item.total_value, 0);
 
   const orderedStatuses = [
     'Open',
@@ -92,19 +88,19 @@ export function DashboardPage() {
   ];
 
   const orderedStatusSummary = orderedStatuses.map(status => 
-    chargebackStats.status_summary.find(item => item.current_status === status)
+    dashboardData.chargeback_status_summary.find(item => item.current_status === status)
   ).filter((item): item is StatusSummary => item !== undefined);
 
   const windows = ["7d", "14d", "21d", "28d"];
   const timeWindowLabels: Record<string, string> = { "7d": "Last 7 Days", "14d": "Last 14 Days", "21d": "Last 21 Days", "28d": "Last 28 Days" };
 
   const tableData = [
-    ["New Items", ...windows.map(w => chargebackStats.time_windows[w as TimeWindowKey].new_items_count.toLocaleString())],
-    ["Value of New Items", ...windows.map(w => formatCurrency(parseFloat(chargebackStats.time_windows[w as TimeWindowKey].new_items_value)))],
-    ["Passed to PFS", ...windows.map(w => chargebackStats.time_windows[w as TimeWindowKey].passed_to_pfs.toLocaleString())],
-    ["Completed by PFS", ...windows.map(w => chargebackStats.time_windows[w as TimeWindowKey].completed_by_pfs.toLocaleString())],
-    ["Avg Days to PFS", ...windows.map(w => `${chargebackStats.time_windows[w as TimeWindowKey].avg_days_to_pfs.toFixed(2)}`)],
-    ["Avg PFS Completion", ...windows.map(w => `${chargebackStats.time_windows[w as TimeWindowKey].avg_days_for_pfs_complete.toFixed(2)}`)],
+    ["New Items", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].new_items_count.toLocaleString())],
+    ["Value of New Items", ...windows.map(w => formatCurrency(dashboardData.chargeback_time_windows[w as TimeWindowKey].new_items_value))],
+    ["Passed to PFS", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].passed_to_pfs.toLocaleString())],
+    ["Completed by PFS", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].completed_by_pfs.toLocaleString())],
+    ["Avg Days to PFS", ...windows.map(w => `${dashboardData.chargeback_time_windows[w as TimeWindowKey].avg_days_to_pfs.toFixed(2)}`)],
+    ["Avg PFS Completion", ...windows.map(w => `${dashboardData.chargeback_time_windows[w as TimeWindowKey].avg_days_for_pfs_complete.toFixed(2)}`)],
   ];
 
   return (
@@ -112,15 +108,15 @@ export function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
        <StatCard
           title="Total Chargebacks"
-          value={totalChargebacks !== null ? totalChargebacks.toString() : "Loading..."}
+          value={totalChargebacks.toLocaleString()}
           icon={<ReceiptText className="h-4 w-4 text-muted-foreground" />}
-          description="Total number of active chargebacks"
+          description={`Total value: ${formatCurrency(totalChargebacksValue)}`}
         />
         <StatCard
           title="Total Delinquencies"
-          value={totalDelinquencies !== null ? totalDelinquencies.toString() : "Loading..."}
+          value={totalDelinquencies.toLocaleString()}
           icon={<Scale className="h-4 w-4 text-muted-foreground" />}
-          description="Total number of active delinquencies"
+          description={`Total value: ${formatCurrency(totalDelinquenciesValue)}`}
         />
      </div>
 
@@ -142,8 +138,8 @@ export function DashboardPage() {
                 {orderedStatusSummary.map(item => (
                   <TableRow key={item.current_status}>
                     <TableCell>{item.current_status}</TableCell>
-                    <TableCell className="text-right">{parseInt(item.status_count).toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
+                    <TableCell className="text-right">{item.status_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.total_value)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -167,6 +163,70 @@ export function DashboardPage() {
                   <TableRow key={i}>
                     <TableCell className="font-medium">{row[0]}</TableCell>
                     {row.slice(1).map((cell, j) => <TableCell key={j} className="text-right">{String(cell)}</TableCell>)}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Delinquencies Status Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dashboardData.nonipac_status_summary.map(item => (
+                  <TableRow key={item.current_status}>
+                    <TableCell>{item.current_status}</TableCell>
+                    <TableCell className="text-right">{item.status_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.total_value)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Delinquencies Aging Schedule</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Business Line</TableHead>
+                  <TableHead className="text-right">Less than 180 Days (Count)</TableHead>
+                  <TableHead className="text-right">Less than 180 Days (Value)</TableHead>
+                  <TableHead className="text-right">1-2 Years (Count)</TableHead>
+                  <TableHead className="text-right">1-2 Years (Value)</TableHead>
+                  <TableHead className="text-right">Over 2 Years (Count)</TableHead>
+                  <TableHead className="text-right">Over 2 Years (Value)</TableHead>
+                  <TableHead className="text-right">Total (Count)</TableHead>
+                  <TableHead className="text-right">Total (Value)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dashboardData.nonipac_aging_schedule.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.business_line}</TableCell>
+                    <TableCell className="text-right">{item.less_than_180_days_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.less_than_180_days_value))}</TableCell>
+                    <TableCell className="text-right">{item.one_to_two_years_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.one_to_two_years_value))}</TableCell>
+                    <TableCell className="text-right">{item.over_two_years_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.over_two_years_value))}</TableCell>
+                    <TableCell className="text-right">{item.total_count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
