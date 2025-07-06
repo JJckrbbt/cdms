@@ -10,6 +10,8 @@ This is where CDMS comes in.  CDMS provides easy and fast updates, with no manua
 
 CDMS is built on Postgres, Go, and React/Typescript.  
 
+CDMS is still under development, but has a working demo deployed to GCP. 
+
 To run:
 1. Clone the repo into a folder.
 2. Start a Postgres database, connect and run 'goose up'
