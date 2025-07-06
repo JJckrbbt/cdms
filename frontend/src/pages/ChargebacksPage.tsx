@@ -158,6 +158,8 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
               }}
               onSave={handleSaveChargeback}
               onCancel={handleCancelChargeback}
+              id={selectedChargeback.id}
+              type="chargeback"
             />
           )}
         </SheetContent>

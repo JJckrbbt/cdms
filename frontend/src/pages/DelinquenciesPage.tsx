@@ -132,6 +132,8 @@ export function DelinquenciesPage() {
               }}
               onSave={handleSaveDelinquency}
               onCancel={handleCancelDelinquency}
+              id={selectedDelinquency.id}
+              type="delinquency"
             />
           )}
         </SheetContent>

@@ -2,6 +2,8 @@ import { formatCurrency } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { StatusHistory } from "./StatusHistory";
 import React, { useState, useEffect } from "react";
 
 interface Field<TData> {
@@ -20,9 +22,11 @@ interface DetailsDrawerProps<TData> {
   };
   onSave: (updatedData: TData) => void;
   onCancel: () => void;
+  id?: number;
+  type?: 'chargeback' | 'delinquency';
 }
 
-export function DetailsDrawer<TData extends object>({ data, fields, onSave, onCancel }: DetailsDrawerProps<TData>) {
+export function DetailsDrawer<TData extends object>({ data, fields, onSave, onCancel, id, type }: DetailsDrawerProps<TData>) {
   const [editableData, setEditableData] = useState(data);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -112,12 +116,24 @@ export function DetailsDrawer<TData extends object>({ data, fields, onSave, onCa
         </div>
       </div>
       <div className="mt-4 pt-4 border-t flex-grow">
-        <h3 className="text-lg font-semibold mb-2">Comments</h3>
-        {fields.comments.map((field) => (
-          <p key={String(field.key)}>
-            <strong>{field.label}:</strong> {renderValue(data[field.key])}
-          </p>
-        ))}
+        <Accordion type="single" collapsible defaultValue="status-history">
+          <AccordionItem value="comments">
+            <AccordionTrigger>Comments</AccordionTrigger>
+            <AccordionContent>
+              {fields.comments.map((field) => (
+                <p key={String(field.key)}>
+                  <strong>{field.label}:</strong> {renderValue(data[field.key])}
+                </p>
+              ))}
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="status-history">
+            <AccordionTrigger>Status History</AccordionTrigger>
+            <AccordionContent>
+              {id && type && <StatusHistory id={id} type={type} />}
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );
