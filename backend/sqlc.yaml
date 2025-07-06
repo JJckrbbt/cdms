@@ -9,17 +9,26 @@ sql:
       go:
         out: "internal/db"
         sql_package: "pgx/v5"
-        sql_driver: github.com/jackc/pgx/v5
         emit_json_tags: true
         emit_interface: true
         overrides:
           - column: "active_chargebacks_with_vendor_info.total_chargeback_amount_sum"
-            go_type:
-              import: "github.com/shopspring/decimal.Decimal"
-              type: "decimal.Decimal"
-
+            go_type: "github.com/shopspring/decimal.Decimal"
+          - column: "active_nonipac_with_vendor_info.total_billed_amount_sum"
+            go_type: "github.com/shopspring/decimal.Decimal"
+          - column: "active_chargebacks_with_vendor_info.days_open_to_pfs"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
+            nullable: true
+          - column: "active_chargebacks_with_vendor_info.days_pfs_to_complete"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
+            nullable: true
+          - column: "active_chargebacks_with_vendor_info.days_complete"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
+            nullable: true
+          - column: "active_nonipac_with_vendor_info.abs_amount"
+            go_type: "github.com/shopspring/decimal.Decimal"
+          - column: "active_chargebacks_with_vendor_info.abs_amount"
+            go_type: "github.com/shopspring/decimal.Decimal"
           - db_type: "pg_catalog.int4"
             go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
             nullable: true
-
-

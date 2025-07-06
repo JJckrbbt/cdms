@@ -1,9 +1,10 @@
+// dashboard_handler.go
 package api
 
 import (
-	//"context"
 	"log/slog"
 	"net/http"
+	"strconv" // Make sure this is imported
 	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -33,75 +34,106 @@ type TimeWindowStats struct {
 	CompletedByPFS        int64   `json:"completed_by_pfs"`
 }
 
-// CombinedChargebackStats holds all the new chargeback stats for the dashboard.
-type CombinedChargebackStats struct {
-	StatusSummary []db.GetChargebackStatusSummaryRow `json:"status_summary"`
-	TimeWindows   map[string]TimeWindowStats         `json:"time_windows"`
+// DashboardStats now holds all the combined dashboard statistics for both chargebacks and delinquencies.
+type DashboardStats struct {
+	ChargebackStatusSummary []db.GetChargebackStatusSummaryRow            `json:"chargeback_status_summary"`
+	ChargebackTimeWindows   map[string]TimeWindowStats                    `json:"chargeback_time_windows"`
+	NonipacStatusSummary    []db.GetNonipacStatusSummaryRow               `json:"nonipac_status_summary"`
+	NonipacAgingSchedule    []db.GetNonipacAgingScheduleByBusinessLineRow `json:"nonipac_aging_schedule"`
 }
 
-// HandleGetChargebackStats handles GET /api/dashboard/chargeback-stats
-func (h *DashboardHandler) HandleGetChargebackStats(c echo.Context) error {
+// HandleGetDashboardStats handles GET /api/dashboard/stats
+// This replaces HandleGetChargebackStats and now fetches all dashboard data.
+func (h *DashboardHandler) HandleGetDashboardStats(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	statusSummary, err := h.queries.GetChargebackStatusSummary(ctx)
+	// --- Fetch Chargeback Data ---
+	chargebackStatusSummary, err := h.queries.GetChargebackStatusSummary(ctx)
 	if err != nil {
-		h.logger.ErrorContext(ctx, "Failed to get chargeback status summary", "error", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve status summary")
+		h.logger.ErrorContext(ctx, "Failed to get chargeback status summary for dashboard", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve chargeback status summary")
 	}
 
-	timeWindows := make(map[string]TimeWindowStats)
+	chargebackTimeWindows := make(map[string]TimeWindowStats)
 	windows := map[string]int{"7d": 7, "14d": 14, "21d": 21, "28d": 28}
 	now := time.Now()
 
 	for key, days := range windows {
-		// Correctly calculate non-overlapping 7-day windows
 		endDate := now.AddDate(0, 0, -(days - 7))
 		startDate := now.AddDate(0, 0, -days)
 
-		// Use pgtype.Timestamptz for the created_at fields, and Date for the others
 		pgStartTimestamp := pgtype.Timestamptz{Time: startDate, Valid: true}
 		pgEndTimestamp := pgtype.Timestamptz{Time: endDate, Valid: true}
 		pgStartDate := pgtype.Date{Time: startDate, Valid: true}
 		pgEndDate := pgtype.Date{Time: endDate, Valid: true}
 
-		// Use the correct generated struct and field names
 		newStats, err := h.queries.GetNewChargebackStatsForWindow(ctx, db.GetNewChargebackStatsForWindowParams{CreatedAt: pgStartTimestamp, CreatedAt_2: pgEndTimestamp})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get new chargebacks stats")
+			h.logger.ErrorContext(ctx, "Failed to get new chargebacks stats for dashboard", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve new chargebacks stats")
 		}
 
-		avgDaysToPFS, err := h.queries.GetAverageDaysToPFSForWindow(ctx, db.GetAverageDaysToPFSForWindowParams{PassedToPfsDate: pgStartDate, PassedToPfsDate_2: pgEndDate})
+		// Fixed: GetAverageDaysToPFSForWindow now returns a string
+		avgDaysToPFSStr, err := h.queries.GetAverageDaysToPFSForWindow(ctx, db.GetAverageDaysToPFSForWindowParams{PassedToPfsDate: pgStartDate, PassedToPfsDate_2: pgEndDate})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get average days to PFS")
+			h.logger.ErrorContext(ctx, "Failed to get average days to PFS for dashboard", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve average days to PFS")
 		}
-		avgDaysToPFSFloat, _ := avgDaysToPFS.Float64Value()
+		avgDaysToPFSFloat, parseErr := strconv.ParseFloat(avgDaysToPFSStr, 64) // Parse string to float64
+		if parseErr != nil {
+			h.logger.ErrorContext(ctx, "Failed to parse avgDaysToPFS string to float", "value", avgDaysToPFSStr, "error", parseErr)
+			avgDaysToPFSFloat = 0.0 // Default to 0 on parse error
+		}
 
-		avgDaysForPFSComplete, err := h.queries.GetAverageDaysForPFSCompletionForWindow(ctx, db.GetAverageDaysForPFSCompletionForWindowParams{PfsCompletionDate: pgStartDate, PfsCompletionDate_2: pgEndDate})
+		// Fixed: GetAverageDaysForPFSCompletionForWindow now returns a string
+		avgDaysForPFSCompleteStr, err := h.queries.GetAverageDaysForPFSCompletionForWindow(ctx, db.GetAverageDaysForPFSCompletionForWindowParams{PfsCompletionDate: pgStartDate, PfsCompletionDate_2: pgEndDate})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get average days for PFS completion")
+			h.logger.ErrorContext(ctx, "Failed to get average days for PFS completion for dashboard", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve average days for PFS completion")
 		}
-		avgDaysForPFSCompleteFloat, _ := avgDaysForPFSComplete.Float64Value()
+		avgDaysForPFSCompleteFloat, parseErr := strconv.ParseFloat(avgDaysForPFSCompleteStr, 64) // Parse string to float64
+		if parseErr != nil {
+			h.logger.ErrorContext(ctx, "Failed to parse avgDaysForPFSComplete string to float", "value", avgDaysForPFSCompleteStr, "error", parseErr)
+			avgDaysForPFSCompleteFloat = 0.0 // Default to 0 on parse error
+		}
 
 		pfsCounts, err := h.queries.GetPFSCountsForWindow(ctx, db.GetPFSCountsForWindowParams{PassedToPfsDate: pgStartDate, PassedToPfsDate_2: pgEndDate})
 		if err != nil {
-			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to get PFS status counts")
+			h.logger.ErrorContext(ctx, "Failed to get PFS status counts for dashboard", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve PFS status counts")
 		}
 
-		newItemsValueStr, _ := newStats.NewChargebacksValue.Value()
+		newItemsValueStr := newStats.NewChargebacksValue // Already a string from SQL cast
 
-		timeWindows[key] = TimeWindowStats{
+		chargebackTimeWindows[key] = TimeWindowStats{
 			NewItemsCount:         newStats.NewChargebacksCount,
-			NewItemsValue:         newItemsValueStr.(string),
-			AvgDaysToPFS:          avgDaysToPFSFloat.Float64,
-			AvgDaysForPFSComplete: avgDaysForPFSCompleteFloat.Float64,
+			NewItemsValue:         newItemsValueStr,
+			AvgDaysToPFS:          avgDaysToPFSFloat,
+			AvgDaysForPFSComplete: avgDaysForPFSCompleteFloat,
 			PassedToPFS:           pfsCounts.PassedToPfsCount,
 			CompletedByPFS:        pfsCounts.CompletedByPfsCount,
 		}
 	}
 
-	stats := CombinedChargebackStats{
-		StatusSummary: statusSummary,
-		TimeWindows:   timeWindows,
+	// --- Fetch Non-IPAC (Delinquency) Data ---
+	nonipacStatusSummary, err := h.queries.GetNonipacStatusSummary(ctx)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "Failed to get non-ipac status summary for dashboard", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve non-ipac status summary")
+	}
+
+	nonipacAgingSchedule, err := h.queries.GetNonipacAgingScheduleByBusinessLine(ctx)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "Failed to get non-ipac aging schedule for dashboard", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve non-ipac aging schedule")
+	}
+
+	// --- Combine and Return Data ---
+	stats := DashboardStats{
+		ChargebackStatusSummary: chargebackStatusSummary,
+		ChargebackTimeWindows:   chargebackTimeWindows,
+		NonipacStatusSummary:    nonipacStatusSummary,
+		NonipacAgingSchedule:    nonipacAgingSchedule,
 	}
 
 	return c.JSON(http.StatusOK, stats)

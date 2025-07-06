@@ -708,6 +708,53 @@ type HistoricalChargebacksWithVendorInfo struct {
 	DaysComplete           int32                     `json:"days_complete"`
 }
 
+type HistoricalNonipacWithVendorInfo struct {
+	ID                          int64                  `json:"id"`
+	ReportingSource             NonipacReportingSource `json:"reporting_source"`
+	BusinessLine                ChargebackBusinessLine `json:"business_line"`
+	BilledTotalAmount           pgtype.Numeric         `json:"billed_total_amount"`
+	PrincipleAmount             pgtype.Numeric         `json:"principle_amount"`
+	InterestAmount              pgtype.Numeric         `json:"interest_amount"`
+	PenaltyAmount               pgtype.Numeric         `json:"penalty_amount"`
+	AdministrationChargesAmount pgtype.Numeric         `json:"administration_charges_amount"`
+	DebitOutstandingAmount      pgtype.Numeric         `json:"debit_outstanding_amount"`
+	CreditTotalAmount           pgtype.Numeric         `json:"credit_total_amount"`
+	CreditOutstandingAmount     pgtype.Numeric         `json:"credit_outstanding_amount"`
+	Title                       pgtype.Text            `json:"title"`
+	DocumentDate                pgtype.Date            `json:"document_date"`
+	AddressCode                 string                 `json:"address_code"`
+	Vendor                      string                 `json:"vendor"`
+	DebtAppealForbearance       bool                   `json:"debt_appeal_forbearance"`
+	Statement                   string                 `json:"statement"`
+	DocumentNumber              string                 `json:"document_number"`
+	VendorCode                  string                 `json:"vendor_code"`
+	CollectionDueDate           pgtype.Date            `json:"collection_due_date"`
+	CurrentStatus               CdmsStatus             `json:"current_status"`
+	PfsPoc                      pgtype.Int8            `json:"pfs_poc"`
+	GsaPoc                      pgtype.Int8            `json:"gsa_poc"`
+	CustomerPoc                 pgtype.Int8            `json:"customer_poc"`
+	PfsContacts                 pgtype.Int2            `json:"pfs_contacts"`
+	OpenDate                    pgtype.Date            `json:"open_date"`
+	ReconciledDate              pgtype.Date            `json:"reconciled_date"`
+	CreatedAt                   pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt                   pgtype.Timestamptz     `json:"updated_at"`
+	IsActive                    bool                   `json:"is_active"`
+	InProcessDate               interface{}            `json:"in_process_date"`
+	ReferredToTreasuryDate      interface{}            `json:"referred_to_treasury_date"`
+	ClosedPaymentReceivedDate   interface{}            `json:"closed_payment_received_date"`
+	RefundDate                  interface{}            `json:"refund_date"`
+	OffsetDate                  interface{}            `json:"offset_date"`
+	WriteOffDate                interface{}            `json:"write_off_date"`
+	BillAsIpacDate              interface{}            `json:"bill_as_ipac_date"`
+	BillAsDodDate               interface{}            `json:"bill_as_dod_date"`
+	EisIssuesDate               interface{}            `json:"eis_issues_date"`
+	AgencyID                    string                 `json:"agency_id"`
+	BureauCode                  string                 `json:"bureau_code"`
+	DaysOld                     int32                  `json:"days_old"`
+	AbsAmount                   int64                  `json:"abs_amount"`
+	DaysToClose                 int32                  `json:"days_to_close"`
+}
+
 type IssueOwnerGsaChargebackMerge struct {
 	UserID       int64 `json:"user_id"`
 	ChargebackID int64 `json:"chargeback_id"`

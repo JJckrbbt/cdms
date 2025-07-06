@@ -13,7 +13,7 @@ import (
 
 const getAverageDaysForPFSCompletionForWindow = `-- name: GetAverageDaysForPFSCompletionForWindow :one
 SELECT
-    COALESCE(AVG(days_pfs_to_complete), 0)::NUMERIC(10, 2) AS avg_days
+    COALESCE(AVG(days_pfs_to_complete), 0)::NUMERIC(10, 2)::TEXT AS avg_days -- Explicitly cast to TEXT
 FROM
     historical_chargebacks_with_vendor_info
 WHERE
@@ -25,17 +25,16 @@ type GetAverageDaysForPFSCompletionForWindowParams struct {
 	PfsCompletionDate_2 interface{} `json:"pfs_completion_date_2"`
 }
 
-// Gets the average days for PFS to complete for chargebacks completed within a specific date window.
-func (q *Queries) GetAverageDaysForPFSCompletionForWindow(ctx context.Context, arg GetAverageDaysForPFSCompletionForWindowParams) (pgtype.Numeric, error) {
+func (q *Queries) GetAverageDaysForPFSCompletionForWindow(ctx context.Context, arg GetAverageDaysForPFSCompletionForWindowParams) (string, error) {
 	row := q.db.QueryRow(ctx, getAverageDaysForPFSCompletionForWindow, arg.PfsCompletionDate, arg.PfsCompletionDate_2)
-	var avg_days pgtype.Numeric
+	var avg_days string
 	err := row.Scan(&avg_days)
 	return avg_days, err
 }
 
 const getAverageDaysToPFSForWindow = `-- name: GetAverageDaysToPFSForWindow :one
 SELECT
-    COALESCE(AVG(days_open_to_pfs), 0)::NUMERIC(10, 2) AS avg_days
+    COALESCE(AVG(days_open_to_pfs), 0)::NUMERIC(10, 2)::TEXT AS avg_days -- Explicitly cast to TEXT
 FROM
     historical_chargebacks_with_vendor_info
 WHERE
@@ -47,10 +46,9 @@ type GetAverageDaysToPFSForWindowParams struct {
 	PassedToPfsDate_2 interface{} `json:"passed_to_pfs_date_2"`
 }
 
-// Gets the average days from creation to 'Passed to PFS' for chargebacks passed within a specific date window.
-func (q *Queries) GetAverageDaysToPFSForWindow(ctx context.Context, arg GetAverageDaysToPFSForWindowParams) (pgtype.Numeric, error) {
+func (q *Queries) GetAverageDaysToPFSForWindow(ctx context.Context, arg GetAverageDaysToPFSForWindowParams) (string, error) {
 	row := q.db.QueryRow(ctx, getAverageDaysToPFSForWindow, arg.PassedToPfsDate, arg.PassedToPfsDate_2)
-	var avg_days pgtype.Numeric
+	var avg_days string
 	err := row.Scan(&avg_days)
 	return avg_days, err
 }
@@ -105,7 +103,7 @@ func (q *Queries) GetChargebackStatusSummary(ctx context.Context) ([]GetChargeba
 const getNewChargebackStatsForWindow = `-- name: GetNewChargebackStatsForWindow :one
 SELECT
     COUNT(*) AS new_chargebacks_count,
-    COALESCE(SUM(chargeback_amount), 0)::NUMERIC(12, 2) AS new_chargebacks_value
+    COALESCE(SUM(chargeback_amount), 0)::NUMERIC(12, 2)::TEXT AS new_chargebacks_value
 FROM
     chargeback
 WHERE
@@ -118,8 +116,8 @@ type GetNewChargebackStatsForWindowParams struct {
 }
 
 type GetNewChargebackStatsForWindowRow struct {
-	NewChargebacksCount int64          `json:"new_chargebacks_count"`
-	NewChargebacksValue pgtype.Numeric `json:"new_chargebacks_value"`
+	NewChargebacksCount int64  `json:"new_chargebacks_count"`
+	NewChargebacksValue string `json:"new_chargebacks_value"`
 }
 
 // Gets the count and total value of new chargebacks created within a specific date window.
