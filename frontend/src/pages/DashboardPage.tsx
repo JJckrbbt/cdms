@@ -56,7 +56,7 @@ export function DashboardPage() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`http://10.98.1.142:8080/api/dashboard`);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/dashboard`);
         const data = await response.json();
         setDashboardData(data);
       } catch (error) {
@@ -96,7 +96,7 @@ export function DashboardPage() {
 
   const tableData = [
     ["New Items", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].new_items_count.toLocaleString())],
-    ["Value of New Items", ...windows.map(w => formatCurrency(dashboardData.chargeback_time_windows[w as TimeWindowKey].new_items_value))],
+    ["Value of New Items", ...windows.map(w => formatCurrency(parseFloat(dashboardData.chargeback_time_windows[w as TimeWindowKey].new_items_value)))],
     ["Passed to PFS", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].passed_to_pfs.toLocaleString())],
     ["Completed by PFS", ...windows.map(w => dashboardData.chargeback_time_windows[w as TimeWindowKey].completed_by_pfs.toLocaleString())],
     ["Avg Days to PFS", ...windows.map(w => `${dashboardData.chargeback_time_windows[w as TimeWindowKey].avg_days_to_pfs.toFixed(2)}`)],

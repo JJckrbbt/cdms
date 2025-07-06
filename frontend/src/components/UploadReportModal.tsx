@@ -43,7 +43,7 @@ export function UploadReportModal({ onClose, onUploadSuccess }: UploadReportModa
     formData.append("report_file", selectedFile);
 
     try {
-      const response = await fetch(`http://10.98.1.142:8080/api/upload/${selectedReportType}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/${selectedReportType}`, {
         method: "POST",
         body: formData,
       });

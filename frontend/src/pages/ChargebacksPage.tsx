@@ -29,7 +29,7 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
 
   const fetchChargebacks = async () => {
     try {
-      const response = await fetch(`http://10.98.1.142:8080/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`);
       const responseData = await response.json();
       
       if (responseData && Array.isArray(responseData.data)) {
@@ -87,7 +87,7 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
         chargeback_amount: updatedData.chargeback_amount,
       };
 
-      const response = await fetch(`http://10.98.1.142:8080/api/chargebacks/${updatedData.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chargebacks/${updatedData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

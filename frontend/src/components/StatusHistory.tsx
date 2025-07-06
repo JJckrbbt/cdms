@@ -25,7 +25,7 @@ export function StatusHistory({ id, type }: StatusHistoryProps) {
     const fetchHistory = async () => {
       try {
         setIsLoading(true);
-        const url = `http://10.98.1.142:8080/api/${type === 'delinquency' ? 'delinquencies' : type + 's'}/history/${id}`;
+        const url = `${import.meta.env.VITE_API_BASE_URL}/api/${type === 'delinquency' ? 'delinquencies' : type + 's'}/history/${id}`;
         console.log('StatusHistory: Fetching from URL:', url);
         const response = await fetch(url);
         if (!response.ok) {

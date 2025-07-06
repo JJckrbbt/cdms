@@ -33,7 +33,7 @@ export function DelinquenciesPage() {
   const fetchDelinquencies = async () => {
     try {
       // Assuming a similar API endpoint for delinquencies
-      const response = await fetch(`http://10.98.1.142:8080/api/delinquencies?limit=${PAGE_SIZE}&page=${page}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/delinquencies?limit=${PAGE_SIZE}&page=${page}`);
       const responseData = await response.json();
       
       if (responseData && Array.isArray(responseData.data)) {
@@ -66,7 +66,7 @@ export function DelinquenciesPage() {
         console.error("Invalid ID for delinquency update:", updatedData.id);
         return;
       }
-      const response = await fetch(`http://10.98.1.142:8080/api/delinquencies/${updatedData.id}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/delinquencies/${updatedData.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
