@@ -24,19 +24,25 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  const handleUploadReportClick = () => {
+    setIsMobileMenuOpen(false);
+    setIsUploadModalOpen(true);
+  };
 
   return (
     <div className="h-screen flex">
       {/* Persistent Sidebar for Desktop */}
       <div className="hidden md:block fixed top-0 left-0 h-full w-[280px] border-r bg-muted/40">
-        <Sidebar onUploadReportClick={() => setIsUploadModalOpen(true)} />
+        <Sidebar onUploadReportClick={handleUploadReportClick} />
       </div>
 
       <div className="flex flex-col flex-1 md:ml-[280px]">
         <header className="flex h-16 items-center justify-between border-b bg-background px-6 sticky top-0 z-10">
           {/* Mobile Navigation */}
-          <Sheet>
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="md:hidden">
                 <PanelLeft className="h-5 w-5" />
@@ -45,7 +51,7 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64">
                 {/* FIXED: Passed the required prop to the Sidebar in the mobile view */}
-              <Sidebar onUploadReportClick={() => setIsUploadModalOpen(true)} />
+              <Sidebar onUploadReportClick={handleUploadReportClick} />
             </SheetContent>
           </Sheet>
           
@@ -88,7 +94,7 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
           </div>
         </main>
         <Sheet open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-              <SheetContent side="bottom" className="w-1/3 ml-0 mr-auto">
+              <SheetContent side="bottom" className="w-[280px]">
                 <SheetHeader>
                   <SheetTitle>Upload Report</SheetTitle>
                   <SheetDescription>

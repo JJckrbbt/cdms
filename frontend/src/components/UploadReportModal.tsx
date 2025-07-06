@@ -88,8 +88,8 @@ export function UploadReportModal({ onClose, onUploadSuccess }: UploadReportModa
         </Label>
         <Input id="file" type="file" className="col-span-3" onChange={handleFileChange} />
       </div>
-      <div className="flex justify-end">
-        <Button onClick={handleUpload} disabled={isUploading || !selectedReportType || !selectedFile}>
+      <div className="flex flex-col gap-2">
+        <Button onClick={handleUpload} disabled={isUploading || !selectedReportType || !selectedFile} className="w-full">
           {isUploading ? "Uploading..." : "Upload"}
         </Button>
       </div>
