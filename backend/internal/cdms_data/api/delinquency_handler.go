@@ -277,3 +277,27 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, updatedDelinquency)
 }
+
+// Handle Get Delinquencies Status History
+func (h *DelinquencyHandler) HandleDelinquencyStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		h.logger.WarnContext(ctx, "Invalid Delinquency ID format provided", "id_param", idParam, "error", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	statusHistory, err := h.queries.GetStatusHistoryForDelinquencies(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			h.logger.InfoContext(ctx, "No status history found for Delinquency ID", "delinquency_id", id)
+			return echo.NewHTTPError(http.StatusNotFound, "Status history not found for the given ID")
+		}
+		h.logger.ErrorContext(ctx, "Failed to get status history for delinquency", "error", err, "delinquency_id", id)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve status history")
+	}
+
+	return c.JSON(http.StatusOK, statusHistory)
+}

@@ -2,8 +2,7 @@
 -- name: ListActiveChargebacks :many
 -- Fetches a paginated list from the active_chargebacks_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT *, count(*) OVER() AS total_count, 
-    SUM(chargeback_amount) OVER() AS total_chargeback_amount_sum
+SELECT *, count(*) OVER() AS total_count
 FROM active_chargebacks_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
@@ -12,8 +11,7 @@ OFFSET $2;
 -- name: ListActiveDelinquencies :many
 -- Fetches a paginated list from the active_nonipac_with_vendor_info view.
 -- The view is already filtered by is_active = true.
-SELECT *, count(*) OVER() AS total_count,
-    SUM(total_billed_amount) OVER() AS total_billed_amount_sum
+SELECT *, count(*) OVER() AS total_count
 FROM active_nonipac_with_vendor_info
 ORDER BY document_date DESC
 LIMIT $1
@@ -52,3 +50,46 @@ WHERE id = $1 LIMIT 1;
 -- name: GetUserByEmail :one
 SELECT * FROM "user" WHERE email = $1;
 
+-- name: GetStatusHistoryForChargeback :many
+-- Fetches Status History for Chargebacks
+SELECT
+    sh.id as status_history_id, 
+    sh.status,
+    sh.status_date, 
+    sh.notes,
+    sh.user_id,
+    u.first_name AS user_first_name,
+    u.last_name AS user_last_name,
+    u.email AS user_email
+FROM
+    "status_history" sh
+JOIN
+    "chargeback_status_merge" csm ON sh.id = csm.status_history_id
+JOIN
+    "user" u ON sh.user_id = u.id
+WHERE
+    csm.chargeback_id = $1 
+ORDER BY
+    sh.status_date DESC;
+
+-- name: GetStatusHistoryForDelinquencies :many
+-- Fetches Status History for Delinquencies
+SELECT
+    sh.id as status_history_id, 
+    sh.status,
+    sh.status_date, 
+    sh.notes,
+    sh.user_id,
+    u.first_name AS user_first_name,
+    u.last_name AS user_last_name,
+    u.email AS user_email
+FROM
+    "status_history" sh
+JOIN
+    "nonipac_status_merge" nsm ON sh.id = nsm.status_history_id
+JOIN
+    "user" u ON sh.user_id = u.id
+WHERE
+    nsm.nonipac_id = $1 
+ORDER BY
+    sh.status_date DESC;

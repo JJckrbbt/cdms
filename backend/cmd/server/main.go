@@ -181,6 +181,7 @@ func main() {
 	chargebackRoutes := e.Group("/api/chargebacks")
 	chargebackRoutes.GET("", chargebackHandler.HandleGetChargebacks)
 	chargebackRoutes.GET("/:id", chargebackHandler.HandleGetByID)
+	chargebackRoutes.GET("/history/:id", chargebackHandler.HandleChargebackStatus)
 	chargebackRoutes.POST("", chargebackHandler.HandleCreate)
 	chargebackRoutes.PATCH("/:id", chargebackHandler.HandleUpdate)
 
@@ -188,6 +189,7 @@ func main() {
 	delinquencyRoutes := e.Group("/api/delinquencies")
 	delinquencyRoutes.GET("", delinquencyHandler.HandleGetDelinquencies)
 	delinquencyRoutes.GET("/:id", delinquencyHandler.HandleGetByID)
+	delinquencyRoutes.GET("/history/:id", delinquencyHandler.HandleDelinquencyStatus)
 	delinquencyRoutes.POST("", delinquencyHandler.HandleCreate)
 	delinquencyRoutes.PATCH("/:id", delinquencyHandler.HandleUpdate)
 

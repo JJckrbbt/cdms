@@ -214,7 +214,6 @@ func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 	var totalValue decimal.Decimal
 	if len(chargebacks) > 0 {
 		totalCount = chargebacks[0].TotalCount
-		totalValue = chargebacks[0].TotalChargebackAmountSum
 	}
 	response := PaginatedChargebacksResponse{
 		TotalCount:           totalCount,
@@ -307,4 +306,28 @@ func (h *ChargebackHandler) HandleUpdate(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, updatedChargeback)
+}
+
+// Handle Get StatusHistoryChargebacks
+func (h *ChargebackHandler) HandleChargebackStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		h.logger.WarnContext(ctx, "Invalid chargeback ID format provided", "id_param", idParam, "error", err)
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
+	}
+
+	statusHistory, err := h.queries.GetStatusHistoryForChargeback(ctx, id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			h.logger.InfoContext(ctx, "No status history found for chargeback ID", "chargeback_id", id)
+			return echo.NewHTTPError(http.StatusNotFound, "Status history not found for the given ID")
+		}
+		h.logger.ErrorContext(ctx, "Failed to get status history for chargeback", "error", err, "chargeback_id", id)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve status history")
+	}
+
+	return c.JSON(http.StatusOK, statusHistory)
 }
