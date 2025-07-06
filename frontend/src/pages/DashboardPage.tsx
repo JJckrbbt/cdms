@@ -39,6 +39,8 @@ type TimeWindowKey = keyof CombinedChargebackStats['time_windows'];
 export function DashboardPage() {
   const [totalDelinquencies, setTotalDelinquencies] = useState<number | null>(null);
   const [totalChargebacks, setTotalChargebacks] = useState<number | null>(null);
+  const [totalChargebacksValue, setTotalChargebacksValue] = useState<number | null>(null);
+  const [totalDelinquenciesValue, setTotalDelinquenciesValue] = useState<number | null>(null);
   const [chargebackStats, setChargebackStats] = useState<CombinedChargebackStats | null>(null);
 
   useEffect(() => {
@@ -79,6 +81,20 @@ export function DashboardPage() {
     return <p>Loading dashboard...</p>;
   }
 
+  const orderedStatuses = [
+    'Open',
+    'In Research',
+    'Hold Pending Internal Action',
+    'Hold Pending External Action',
+    'Passed to PFS',
+    'PFS Return to GSA',
+    'Completed by PFS'
+  ];
+
+  const orderedStatusSummary = orderedStatuses.map(status => 
+    chargebackStats.status_summary.find(item => item.current_status === status)
+  ).filter((item): item is StatusSummary => item !== undefined);
+
   const windows = ["7d", "14d", "21d", "28d"];
   const timeWindowLabels: Record<string, string> = { "7d": "Last 7 Days", "14d": "Last 14 Days", "21d": "Last 21 Days", "28d": "Last 28 Days" };
 
@@ -94,21 +110,46 @@ export function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+       <StatCard
+          title="Total Chargebacks"
+          value={totalChargebacks !== null ? totalChargebacks.toString() : "Loading..."}
+          icon={<ReceiptText className="h-4 w-4 text-muted-foreground" />}
+          description="Total number of active chargebacks"
+        />
         <StatCard
           title="Total Delinquencies"
           value={totalDelinquencies !== null ? totalDelinquencies.toString() : "Loading..."}
           icon={<Scale className="h-4 w-4 text-muted-foreground" />}
           description="Total number of active delinquencies"
         />
-        <StatCard
-          title="Total Chargebacks"
-          value={totalChargebacks !== null ? totalChargebacks.toString() : "Loading..."}
-          icon={<ReceiptText className="h-4 w-4 text-muted-foreground" />}
-          description="Total number of active chargebacks"
-        />
-      </div>
+     </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <Card>
+          <CardHeader>
+            <CardTitle>Chargebacks Status Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
+                  <TableHead className="text-right">Value</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {orderedStatusSummary.map(item => (
+                  <TableRow key={item.current_status}>
+                    <TableCell>{item.current_status}</TableCell>
+                    <TableCell className="text-right">{parseInt(item.status_count).toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Chargeback Trends</CardTitle>
@@ -133,32 +174,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Status Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {chargebackStats.status_summary.map(item => (
-                  <TableRow key={item.current_status}>
-                    <TableCell>{item.current_status}</TableCell>
-                    <TableCell className="text-right">{parseInt(item.status_count).toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(parseFloat(item.total_value))}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+     </div>
     </div>
   );
 }

@@ -8,13 +8,12 @@ const PAGE_SIZE = 500;
 
 const chargebackStatusOptions = [
   'Open',
-  'Hold Pending External Action',
-  'Hold Pending Internal Action',
   'In Research',
+  'Hold Pending Internal Action',
+  'Hold Pending External Action',
   'Passed to PFS',
-  'Completed by PFS',
   'PFS Return to GSA',
-  'New'
+  'Completed by PFS',
 ];
 
 interface ChargebacksPageProps {
