@@ -1,4 +1,3 @@
-// internal/cdms_data/importer/importer.go
 package importer
 
 import (
@@ -77,7 +76,6 @@ func (i *Importer) StoreFile(ctx context.Context, fileHeader *multipart.FileHead
 		return nil, fmt.Errorf("importer: failed to close GCS writer: %w", err)
 	}
 
-	// UPDATED: Pass the native pgx pool to sqlc's New function
 	queries := db.New(i.dbClient.Pool)
 
 	params := db.CreateUploadParams{
@@ -106,7 +104,6 @@ func (i *Importer) StoreFile(ctx context.Context, fileHeader *multipart.FileHead
 	}, nil
 }
 
-// UpdateUploadStatus now accepts the processing counts.
 func (i *Importer) UpdateUploadStatus(ctx context.Context, uploadID uuid.UUID, status string, errorDetails string, rowsUpserted int64, rowsRemoved int) error {
 	queries := db.New(i.dbClient.Pool)
 
@@ -120,7 +117,6 @@ func (i *Importer) UpdateUploadStatus(ctx context.Context, uploadID uuid.UUID, s
 	}
 
 	err := queries.UpdateUploadStatus(ctx, params)
-	// ... (error logging is the same) ...
 	if err != nil {
 		i.logger.ErrorContext(ctx, "Importer: Failed to update upload status in database",
 			"error", err,

@@ -1,4 +1,3 @@
-// ... (imports and other setup are the same) ...
 package processor
 
 import (
@@ -69,7 +68,6 @@ func NewProcessor(dbClient *database.DBClient, logger *slog.Logger, cfg *config.
 		return nil, fmt.Errorf("failed to create GCS client for processor: %w", err)
 	}
 
-	// Uses the correct package `db` and the correct variable `dbClient`
 	queries := db.New(dbClient.Pool)
 	systemUser, err := queries.GetUserByEmail(ctx, "system@cdms.local")
 	if err != nil {
@@ -77,14 +75,13 @@ func NewProcessor(dbClient *database.DBClient, logger *slog.Logger, cfg *config.
 		return nil, fmt.Errorf("failed to fetch system user ID, processor cannot start: %w", err)
 	}
 
-	// This is now the complete and correct way to initialize the Processor.
 	return &Processor{
-		db:           dbClient, // Use the parameter variable
+		db:           dbClient,
 		logger:       logger,
 		cfg:          cfg,
 		gcsClient:    gcsClient,
 		gcsBucket:    cfg.GCSBucketName,
-		systemUserID: systemUser.ID, // Use the 'systemUser' variable to satisfy the compiler
+		systemUserID: systemUser.ID,
 	}, nil
 }
 
@@ -101,16 +98,12 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 
 	csvReader := csv.NewReader(reader)
 	csvReader.TrimLeadingSpace = true
-	// Do not use ReuseRecord when pre-reading all records
-	// csvReader.ReuseRecord = true
 
-	// --- Header Validation ---
 	headers, err := csvReader.Read()
 	if err != nil {
 		procLogger.ErrorContext(ctx, "Error reading header row", "error", err)
 		return &ProcessingResult{Status: "FAILED_INVALID_FORMAT", Error: fmt.Errorf("error reading header row: %w", err)}
 	}
-	// ... (header validation switch case is the same) ...
 	var expectedHeaders []string
 	switch reportType {
 	case "BC1300":
@@ -136,19 +129,15 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 		headerMap[strings.TrimSpace(h)] = i
 	}
 
-	// --- Pre-read all records from CSV to gather keys for batch lookup ---
 	allRecords, err := csvReader.ReadAll()
 	if err != nil {
 		procLogger.ErrorContext(ctx, "Failed to read all CSV records", "error", err)
 		return &ProcessingResult{Status: "FAILED_INVALID_FORMAT", Error: fmt.Errorf("failed to read all CSV records: %w", err)}
 	}
 
-	// This map will store existing chargeback sources from the DB
 	existingChargebackSources := make(map[string]db.ChargebackReportingSource)
 
-	// If processing a chargeback report, perform the pre-check
 	if reportType == "BC1048" || reportType == "BC1300" {
-		// 1. Gather all bd_doc_nums from the file
 		bdDocNums := make([]string, 0, len(allRecords))
 		bdDocNumIndex, ok := headerMap["BD Doc Num"]
 		if !ok {
@@ -160,7 +149,6 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 			}
 		}
 
-		// 2. Fetch existing chargebacks from DB matching those keys
 		if len(bdDocNums) > 0 {
 			queries := db.New(p.db.Pool)
 			existingRows, err := queries.GetChargebackSourcesByBDDocNums(ctx, bdDocNums)
@@ -168,7 +156,6 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 				return &ProcessingResult{Status: "FAILED_GENERIC", Error: fmt.Errorf("failed to get existing chargebacks: %w", err)}
 			}
 
-			// 3. Build a map for quick lookups
 			for _, row := range existingRows {
 				key := fmt.Sprintf("%s-%d", row.BdDocNum, row.AlNum)
 				existingChargebackSources[key] = row.ReportingSource
@@ -176,7 +163,6 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 		}
 	}
 
-	// --- Main processing loop ---
 	processedChargebacks := []model.Chargeback{}
 	processedNonIpacs := []model.NonIpac{}
 	processedAgencyBureaus := []model.AgencyBureau{}
@@ -194,12 +180,11 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 
 			businessKey := fmt.Sprintf("%s-%d", chargeback.BDDocNum, chargeback.ALNum)
 
-			// NEW VALIDATION: Check for cross-report conflicts
 			if existingSource, found := existingChargebackSources[businessKey]; found {
 				if string(existingSource) != reportType {
 					reason := fmt.Sprintf("Conflict: Record exists but belongs to a different report source ('%s')", existingSource)
 					removedRows = append(removedRows, createRemovedRowEntry(uploadID, record, reason, reportType))
-					continue // Skip this record
+					continue
 				}
 			}
 
@@ -209,7 +194,7 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 				processedChargebacks = append(processedChargebacks, chargeback)
 				processedKeys[businessKey] = true
 			}
-		// ... (other cases for NonIpac and VendorCode remain the same) ...
+
 		case "OUTSTANDING_BILLS":
 			nonipac, convErr := convertRecordToNonIpac(record, headerMap, reportType)
 			if convErr != nil {
@@ -239,7 +224,6 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 		}
 	}
 
-	// --- Database Transaction ---
 	rowsUpserted, err := p.executeMergeTransaction(ctx, uploadID, reportType, removedRows, processedChargebacks, processedNonIpacs, processedAgencyBureaus)
 	if err != nil {
 		procLogger.ErrorContext(ctx, "Failed to execute database merge transaction", "error", err)
@@ -258,7 +242,6 @@ func (p *Processor) ProcessFileFromCloudStorage(ctx context.Context, uploadID st
 	}
 }
 
-// ... (The rest of the file - executeMergeTransaction, helpers, etc. - remains unchanged)
 func (p *Processor) executeMergeTransaction(ctx context.Context, uploadID string, reportType string, removedRows []model.RemovedRow, chargebacks []model.Chargeback, nonipacs []model.NonIpac, agencyBureaus []model.AgencyBureau) (int64, error) {
 	tx, err := p.db.Pool.Begin(ctx)
 	if err != nil {
@@ -344,7 +327,6 @@ func (p *Processor) executeMergeTransaction(ctx context.Context, uploadID string
 	return rowsAffected, tx.Commit(ctx)
 }
 
-// --- pgx.CopyFromSource Implementations ---
 type chargebackCopySource struct {
 	rows []model.Chargeback
 	idx  int
@@ -419,7 +401,6 @@ func (s *removedRowCopySource) Values() ([]any, error) {
 }
 func (s *removedRowCopySource) Err() error { return nil }
 
-// --- Helper & Conversion Functions ---
 func areHeadersValid(actual, expected []string) bool {
 	if len(actual) != len(expected) {
 		return false
@@ -506,11 +487,9 @@ func parseBool(record []string, headerMap map[string]int, headerName string) (bo
 func createRemovedRowEntry(uploadID string, originalData []string, reason string, reportType string) model.RemovedRow {
 	uid, _ := uuid.Parse(uploadID)
 
-	// Marshal the slice of strings into a valid JSON array.
 	jsonData, err := json.Marshal(originalData)
 	var rowData string
 	if err != nil {
-		// If marshalling fails (very unlikely), create a fallback string representation.
 		rowData = `["error marshalling original row"]`
 	} else {
 		rowData = string(jsonData)

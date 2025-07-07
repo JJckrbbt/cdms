@@ -2,18 +2,15 @@
 package logger
 
 import (
-	//"context" // For context.Background() in L()
 	"io"
-	"log"      // For log.Printf in warnings/fatal
-	"log/slog" // The standard library structured logger
-	"os"       // For os.Stdout/Stderr
-	"time"     // For time formatting in logs
+	"log"
+	"log/slog"
+	"os"
+	"time"
 )
 
-var globalLogger *slog.Logger // The globally accessible slog instance
+var globalLogger *slog.Logger // The globally accessible logger
 
-// InitLogger initializes the global slog logger based on the application environment.
-// It configures different handlers for development (text) and production (JSON).
 func InitLogger(env string) {
 	var handler slog.Handler
 	var opts slog.HandlerOptions
@@ -21,7 +18,6 @@ func InitLogger(env string) {
 	// Customize common handler options
 	opts.AddSource = true // Always include file:line in logs for easy debugging
 	opts.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {
-		// Customize attributes for readability and common practices
 
 		// Rename 'message' to 'msg' (common in structured logging)
 		if a.Key == slog.MessageKey {
@@ -36,9 +32,9 @@ func InitLogger(env string) {
 
 	switch env {
 	case "development":
-		opts.Level = slog.LevelDebug // Show all debug messages in development
+		opts.Level = slog.LevelDebug
 		handler = slog.NewTextHandler(os.Stdout, &opts)
-	case "development-json": // An option for local dev to see production-like JSON
+	case "development-json":
 		opts.Level = slog.LevelDebug
 		handler = slog.NewJSONHandler(os.Stdout, &opts)
 	case "production", "staging":

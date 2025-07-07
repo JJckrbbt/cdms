@@ -14,8 +14,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// --- Request Structs for PATCH ---
-// We define separate structs for extensibility, as you planned.
 
 type UserUpdateDelinquencyRequest struct {
 	CurrentStatus *string `json:"current_status"`
@@ -46,7 +44,6 @@ type PaginatedDelinquenciesReponse struct {
 	Data       []db.ListActiveDelinquenciesRow `json:"data"`
 }
 
-// CreateDelinquencyRequest defines the JSON body for creating a delinquency.
 type CreateDelinquencyRequest struct {
 	BusinessLine                string          `json:"business_line"`
 	BilledTotalAmount           decimal.Decimal `json:"billed_total_amount"`
@@ -70,14 +67,12 @@ type CreateDelinquencyRequest struct {
 	CurrentStatus               *string         `json:"current_status"`
 }
 
-// HandleCreate handles POST /api/outstanding
 func (h *DelinquencyHandler) HandleCreate(c echo.Context) error {
 	var req CreateDelinquencyRequest
 	if err := c.Bind(&req); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body: "+err.Error())
 	}
 
-	// --- Input Validation & Type Conversion ---
 	docDate, err := time.Parse("2006-01-02", req.DocumentDate)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid document_date format, expected YYYY-MM-DD")
@@ -176,7 +171,6 @@ func (h *DelinquencyHandler) HandleGetDelinquencies(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-// NEW: Add the handler for getting a single delinquency by ID.
 func (h *DelinquencyHandler) HandleGetByID(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -196,7 +190,6 @@ func (h *DelinquencyHandler) HandleGetByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, delinquency)
 }
 
-// HandleUpdate handles PATCH /api/outstanding/{id} with role-based logic.
 func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -278,7 +271,6 @@ func (h *DelinquencyHandler) HandleUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedDelinquency)
 }
 
-// Handle Get Delinquencies Status History
 func (h *DelinquencyHandler) HandleDelinquencyStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 

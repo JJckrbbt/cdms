@@ -8,7 +8,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// --- Custom ENUM types for Chargeback ---
 type ChargebackReportingSource string
 type ChargebackStatus string
 type ChargebackReasonCode string
@@ -16,11 +15,9 @@ type ChargebackAction string
 type ChargebackBusinessLine string
 type ChargebackFund string
 
-// --- Custom ENUM types for NonIpac ---
 type NonIpacReportingSource string
 type NonIpacStatus string
 
-// Chargeback maps to the 'chargeback' table.
 type Chargeback struct {
 	ID                  int64                     `json:"id"`
 	ReportingSource     ChargebackReportingSource `json:"reporting_source"`
@@ -62,7 +59,6 @@ type Chargeback struct {
 	IsActive            bool                      `json:"is_active"`
 }
 
-// NonIpac maps to the 'nonIpac' table.
 type NonIpac struct {
 	ID                          int64                  `json:"id"`
 	ReportingSource             NonIpacReportingSource `json:"reporting_source"`
@@ -99,7 +95,6 @@ type NonIpac struct {
 	IsActive                    bool                   `json:"is_active"`
 }
 
-// AgencyBureau maps to the 'agency_bureau' table.
 type AgencyBureau struct {
 	Agency     string    `json:"agency"`
 	BureauCode string    `json:"bureau_code"`
@@ -108,7 +103,6 @@ type AgencyBureau struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-// RemovedRow represents a row from a CSV that was skipped during processing.
 type RemovedRow struct {
 	ID               uuid.UUID `json:"id"`
 	UploadID         uuid.UUID `json:"upload_id"`
@@ -118,15 +112,14 @@ type RemovedRow struct {
 	ReasonForRemoval string    `json:"reason_for_removal"`
 }
 
-// Upload tracks the status and metadata of each report file uploaded
 type Upload struct {
 	ID                uuid.UUID  `json:"id"`
-	StorageKey        string     `json:"storage_key"`          // Path to the raw file in S3
-	Filename          string     `json:"filename"`             // Original filename
-	ReportType        string     `json:"report_type"`          // e.g., 'BC1300', 'BC1048'
-	Status            string     `json:"status"`               // e.g., 'UPLOADED', 'PROCESSING', 'COMPLETE'
-	UploadedAt        time.Time  `json:"uploaded_at"`          //
-	ProcessedAt       *time.Time `json:"processed_at"`         //
-	ErrorDetails      *string    `json:"error_details"`        //
-	ProcessedByUserID *uuid.UUID `json:"processed_by_user_id"` //
+	StorageKey        string     `json:"storage_key"`
+	Filename          string     `json:"filename"`
+	ReportType        string     `json:"report_type"`
+	Status            string     `json:"status"`
+	UploadedAt        time.Time  `json:"uploaded_at"`
+	ProcessedAt       *time.Time `json:"processed_at"`
+	ErrorDetails      *string    `json:"error_details"`
+	ProcessedByUserID *uuid.UUID `json:"processed_by_user_id"`
 }

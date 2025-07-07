@@ -14,9 +14,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// --- Request Structs for PATCH operations ---
 
-// UserUpdateChargebackRequest defines fields a regular user can modify.
 type UserUpdateChargebackRequest struct {
 	CurrentStatus          *string `json:"current_status"`
 	ReasonCode             *string `json:"reason_code"`
@@ -29,7 +27,6 @@ type UserUpdateChargebackRequest struct {
 	PassedToPSF            *string `json:"passed_to_psf"` // YYYY-MM-DD
 }
 
-// PFSUpdateChargebackRequest defines fields a PFS user can modify.
 type PFSUpdateChargebackRequest struct {
 	CurrentStatus      *string `json:"current_status"`
 	PassedToPSF        *string `json:"passed_to_psf"` // YYYY-MM-DD
@@ -37,7 +34,6 @@ type PFSUpdateChargebackRequest struct {
 	PFSCompletionDate  *string `json:"pfs_completion_date"` // YYYY-MM-DD
 }
 
-// AdminUpdateChargebackRequest defines fields an Admin can modify.
 type AdminUpdateChargebackRequest struct {
 	CurrentStatus          *string `json:"current_status"`
 	ReasonCode             *string `json:"reason_code"`
@@ -51,7 +47,6 @@ type AdminUpdateChargebackRequest struct {
 	PFSCompletionDate      *string `json:"pfs_completion_date"`
 }
 
-// Create Chargeback Struct defines fields an Admin uses to manually create Chargeback
 type CreateChargebackRequest struct {
 	Fund              string          `json:"fund"`
 	BusinessLine      string          `json:"business_line"`
@@ -64,7 +59,7 @@ type CreateChargebackRequest struct {
 	TaskSubtask       string          `json:"task_subtask"`
 	CustomerName      string          `json:"customer_name"`
 	OrgCode           string          `json:"org_code"`
-	DocumentDate      string          `json:"document_date"` // Expect dates as "YYYY-MM-DD" strings
+	DocumentDate      string          `json:"document_date"`
 	AccompDate        string          `json:"accomp_date"`
 	ChargebackAmount  decimal.Decimal `json:"chargeback_amount"`
 	Statement         string          `json:"statement"`
@@ -99,7 +94,6 @@ func NewChargebackHandler(q db.Querier, logger *slog.Logger) *ChargebackHandler 
 	}
 }
 
-// HandleCreate handles POST /api/chargebacks
 func (h *ChargebackHandler) HandleCreate(c echo.Context) error {
 	var req CreateChargebackRequest
 	if err := c.Bind(&req); err != nil {
@@ -115,7 +109,6 @@ func (h *ChargebackHandler) HandleCreate(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid accomp_date format, expected YYYY-MM-DD")
 	}
 
-	// Params for DB Call
 	params := db.CreateChargebackParams{
 		Fund:              db.ChargebackFund(req.Fund),
 		BusinessLine:      db.ChargebackBusinessLine(req.BusinessLine),
@@ -153,16 +146,13 @@ func (h *ChargebackHandler) HandleCreate(c echo.Context) error {
 	return c.JSON(http.StatusCreated, chargeback)
 }
 
-// HandleList handles GET /api/chargebacks
 func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// Check for Business Key Lookup query parameters
 	bdDocNum := c.QueryParam("bd_doc_num")
 	alNumStr := c.QueryParam("al_num")
 
 	if bdDocNum != "" && alNumStr != "" {
-		// --- Logic for getting a single item by business key ---
 		h.logger.InfoContext(ctx, "Performing lookup by business key", "bd_doc_num", bdDocNum, "al_num", alNumStr)
 
 		alNum, err := strconv.ParseInt(alNumStr, 10, 16)
@@ -187,7 +177,6 @@ func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 		return c.JSON(http.StatusOK, chargeback)
 	}
 
-	// --- Fallback to Pagination Logic for getting a list ---
 	h.logger.InfoContext(ctx, "Performing paginated list lookup for chargebacks")
 
 	limit, err := strconv.Atoi(c.QueryParam("limit"))
@@ -224,7 +213,6 @@ func (h *ChargebackHandler) HandleGetChargebacks(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
-// HandleGetByID handles GET /api/chargebacks/{id}
 func (h *ChargebackHandler) HandleGetByID(c echo.Context) error {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -234,7 +222,6 @@ func (h *ChargebackHandler) HandleGetByID(c echo.Context) error {
 
 	chargeback, err := h.queries.GetActiveChargebackByID(c.Request().Context(), id)
 	if err != nil {
-		// Check if the error is a "not found" error to return a 404
 		if errors.Is(err, pgx.ErrNoRows) {
 			return echo.NewHTTPError(http.StatusNotFound, "Chargeback not found")
 		}
@@ -245,7 +232,6 @@ func (h *ChargebackHandler) HandleGetByID(c echo.Context) error {
 	return c.JSON(http.StatusOK, chargeback)
 }
 
-// HandleUpdate now contains logic to differentiate based on user role.
 func (h *ChargebackHandler) HandleUpdate(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -254,13 +240,11 @@ func (h *ChargebackHandler) HandleUpdate(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid ID format")
 	}
 
-	// This role would come from validated JWT middleware in a real application
 	userRole := c.Request().Header.Get("X-User-Role")
 	if userRole == "" {
-		userRole = "user" // Default to least privileged
+		userRole = "user"
 	}
 
-	// Fetch existing record to merge changes onto
 	existing, err := h.queries.GetChargebackForUpdate(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -308,7 +292,6 @@ func (h *ChargebackHandler) HandleUpdate(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedChargeback)
 }
 
-// Handle Get StatusHistoryChargebacks
 func (h *ChargebackHandler) HandleChargebackStatus(c echo.Context) error {
 	ctx := c.Request().Context()
 

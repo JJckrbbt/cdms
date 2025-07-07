@@ -1,4 +1,3 @@
-// internal/config/config.go
 package config
 
 import (
@@ -8,19 +7,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Config holds the application's configuration settings.
 type Config struct {
 	DatabaseURL   string
 	AppEnv        string
 	GCSBucketName string
 	SentryDSN     string `env:"SENTRY_DSN"`
-	// Add any other configuration variables here (e.g., API keys, service endpoints)
 }
 
-// LoadConfig loads configuration from environment variables or .env file.
 func LoadConfig() (*Config, error) {
-	// Load .env file in development. In production, env vars are set directly.
-	// It's fine if .env doesn't exist (e.g., in production deployments).
 	_ = godotenv.Load()
 
 	dbURL := os.Getenv("DATABASE_URL")
@@ -30,7 +24,7 @@ func LoadConfig() (*Config, error) {
 
 	appEnv := os.Getenv("APP_ENV")
 	if appEnv == "" {
-		appEnv = "development" // Default to development if not set
+		appEnv = "development"
 	}
 
 	gcsBucketName := os.Getenv("GCS_BUCKET_NAME")

@@ -7,8 +7,6 @@ import (
 	"github.com/jjckrbbt/cdms/backend/internal/db"
 )
 
-// derefString safely dereferences a string pointer and returns its value.
-// If the pointer is nil, it returns an empty string.
 func derefString(s *string) string {
 	if s != nil {
 		return *s
@@ -16,8 +14,6 @@ func derefString(s *string) string {
 	return ""
 }
 
-// derefStringWithDefault safely dereferences a string pointer.
-// If the pointer is nil, it returns the provided default value.
 func derefStringWithDefault(s *string, defaultValue string) string {
 	if s != nil {
 		return *s
@@ -25,7 +21,6 @@ func derefStringWithDefault(s *string, defaultValue string) string {
 	return defaultValue
 }
 
-// --- Helper functions to build the update params ---
 
 func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Chargeback) db.UserUpdateChargebackParams {
 	params := db.UserUpdateChargebackParams{
@@ -38,7 +33,6 @@ func buildUserUpdateParams(req *UserUpdateChargebackRequest, existing *db.Charge
 		LineOfAccountingRebill: existing.LineOfAccountingRebill,
 		SpecialInstruction:     existing.SpecialInstruction,
 	}
-	// Merge updates from request
 	if req.CurrentStatus != nil {
 		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
@@ -70,7 +64,6 @@ func buildPFSUpdateParams(req *PFSUpdateChargebackRequest, existing *db.Chargeba
 		CurrentStatus:      existing.CurrentStatus,
 		NewIpacDocumentRef: existing.NewIpacDocumentRef,
 	}
-	// Merge updates
 	if req.CurrentStatus != nil {
 		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
@@ -92,7 +85,6 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 		LineOfAccountingRebill: existing.LineOfAccountingRebill,
 		SpecialInstruction:     existing.SpecialInstruction,
 	}
-	// Merge updates
 	if req.CurrentStatus != nil {
 		params.CurrentStatus = db.CdmsStatus(*req.CurrentStatus)
 	}
@@ -118,7 +110,6 @@ func buildAdminUpdateParams(req *AdminUpdateChargebackRequest, existing *db.Char
 	return params
 }
 
-// Helper for converting date strings to pgtype.Date
 func parseDateToPG(dateStr string) pgtype.Date {
 	t, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
