@@ -509,7 +509,6 @@ func convertRecordToChargeback(record []string, headerMap map[string]int, report
 	chargeback := model.Chargeback{
 		ReportingSource: model.ChargebackReportingSource(reportType),
 		IsActive:        true,
-		CurrentStatus:   "Open",
 	}
 
 	if val, ok := getString(record, headerMap, "Fund"); !ok || val == "" {

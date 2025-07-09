@@ -119,8 +119,6 @@ ON CONFLICT (bd_doc_num, al_num) DO UPDATE SET
     statement = EXCLUDED.statement,
     vendor = EXCLUDED.vendor,
     articles_services = EXCLUDED.articles_services,
-    current_status = EXCLUDED.current_status,
-    reason_code = EXCLUDED.reason_code,
     action = EXCLUDED.action,
     is_active = true,
     updated_at = NOW()
