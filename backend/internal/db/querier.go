@@ -54,6 +54,9 @@ type Querier interface {
 	// Gets the count of chargebacks passed to PFS and completed by PFS within a specific date window.
 	// This version uses conditional aggregation for better performance and to avoid ambiguity.
 	GetPFSCountsForWindow(ctx context.Context, arg GetPFSCountsForWindowParams) (GetPFSCountsForWindowRow, error)
+	// Fetches all rows removed by processing of a particular upload
+	// most recent first
+	GetRemovedRowsByUploadID(ctx context.Context, uploadID pgtype.UUID) ([]RemovedRowsLog, error)
 	// Fetches Status History for Chargebacks
 	GetStatusHistoryForChargeback(ctx context.Context, chargebackID int64) ([]GetStatusHistoryForChargebackRow, error)
 	// Fetches Status History for Delinquencies

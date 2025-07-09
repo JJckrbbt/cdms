@@ -177,6 +177,11 @@ func main() {
 	//Upload group
 	e.POST("/api/upload/:reportType", uploadHandler.HandleUpload)
 
+	//Upload Reporting Group
+	uploadRoutes := e.Group("/api/uploads")
+	uploadRoutes.GET("", uploadHandler.HandleGetUploads)
+	uploadRoutes.GET("/:id/removed_rows", uploadHandler.HandleGetRemovedRows)
+
 	//Chargeback group
 	chargebackRoutes := e.Group("/api/chargebacks")
 	chargebackRoutes.GET("", chargebackHandler.HandleGetChargebacks)

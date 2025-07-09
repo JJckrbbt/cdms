@@ -2,15 +2,20 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/db"
 	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/importer"
 	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/processor"
 )
@@ -18,6 +23,7 @@ import (
 type UploadHandler struct {
 	importer  *importer.Importer
 	processor *processor.Processor
+	queries	  db.Querier
 	logger    *slog.Logger
 }
 
@@ -25,6 +31,7 @@ func NewUploadHandler(imp *importer.Importer, proc *processor.Processor, appLogg
 	return &UploadHandler{
 		importer:  imp,
 		processor: proc,
+		queries:	q,
 		logger:    appLogger.With("component", "cdms_api_handler"),
 	}
 }
@@ -34,6 +41,54 @@ var AllowedReportTypes = map[string]bool{
 	"BC1048":            true,
 	"OUTSTANDING_BILLS": true,
 	"VENDOR_CODE":       true,
+}
+
+func (h *UploadHandler) HandleGetUploads(c echo.Context) error {
+	ctx := c.Request().Context()
+	limit, err := strconv.Atoi(c.QueryParam("limit"))
+	if err != nil || limit <= 0 {
+		limit = 25
+	}
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil || page <=0 {
+		page = 1
+	}
+	offset := (page - 1) * limit
+
+	params := db.ListUploadsParama{
+		Limit:  int32(limit),
+		Offset: int32(offset),
+	}
+
+	uploads, err := h.queries.ListUploads(ctx, params)
+	if err != nil {
+		h.logger.ErrorContext(ctx, "Failed to list uploads", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, Failed to retrieve upload history")
+	}
+
+	return c.JSON(http.StatusOK, uploads)
+}
+
+func (h *UploadHandler) HandleGetRemovedRows(c echo.Context) error {
+	ctx := c.Request()Context()
+	uploadIDStr := c.Param("id")
+	uploadID, err := uuid.Parse(uploadIDStr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid upload ID format")
+	}
+
+	pgUUID := pgtype.UUID{Bytes: uploadID, Valid: true}
+
+	rows, err := h.queries.GetRemovedRowsByUploadID(ctx, pgUUID)
+	if err != nil {
+		if errors.Is(errors.Is(err, pgx.ErrNoRows){
+			return c.JSON(http.StatusOK, []db.RemovedRowsLog{})
+		}
+		h.logger.ErrContext(ctx, "Failed to get removed rows for upload", uploadIDStr, "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve removed rows")
+	}
+
+	return c.JSON(http.StatusOK, rows)
 }
 
 func (h *UploadHandler) HandleUpload(c echo.Context) error {
