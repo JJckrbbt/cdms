@@ -50,6 +50,12 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
             <Upload className="h-4 w-4" />
             Upload Report
           </Button>
+          <Link to="/uploads" className="w-full">
+            <Button variant="ghost" className="justify-start gap-2 w-full">
+              <Upload className="h-4 w-4" />
+              Uploads
+            </Button>
+          </Link>
           <Button variant="ghost" className="justify-start gap-2">
             <Settings className="h-4 w-4" />
             Admin
