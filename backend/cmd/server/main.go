@@ -85,7 +85,7 @@ func main() {
 	// Initialize your HTTP API handlers.
 	apiLogger := appLogger.With("service", "api_handlers")
 
-	uploadHandler := api.NewUploadHandler(fileImporter, cdmsProcessor, apiLogger)
+	uploadHandler := api.NewUploadHandler(fileImporter, cdmsProcessor, realQuerier, apiLogger)
 	chargebackHandler := api.NewChargebackHandler(realQuerier, apiLogger)
 	delinquencyHandler := api.NewDelinquencyHandler(realQuerier, apiLogger)
 	dashboardHandler := api.NewDashboardHandler(realQuerier, apiLogger)
@@ -107,7 +107,7 @@ func main() {
 	e.Use(middleware.Recover())
 	// CORS middleware: Essential for React frontend.
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"http://34.8.206.198", "https://cdms-backend-414620627769.us-central1.run.app", "https://cdms.jjckrbbt.dev"}, // Replace with your React dev server URL
+		AllowOrigins: []string{"http://localhost:5173", "http://34.8.206.198", "https://cdms-backend-414620627769.us-central1.run.app", "https://cdms.jjckrbbt.dev"}, // Replace with your React dev server URL
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete, http.MethodOptions},
 		AllowHeaders: []string{"Origin", "Content-Length", "Content-Type", "Accept", "Authorization"},
 		// Add AllowCredentials: true if you send cookies/credentials
@@ -180,7 +180,7 @@ func main() {
 	//Upload Reporting Group
 	uploadRoutes := e.Group("/api/uploads")
 	uploadRoutes.GET("", uploadHandler.HandleGetUploads)
-	uploadRoutes.GET("/:id/removed_rows", uploadHandler.HandleGetRemovedRows)
+	uploadRoutes.GET("/removed_rows/:id", uploadHandler.HandleGetRemovedRows)
 
 	//Chargeback group
 	chargebackRoutes := e.Group("/api/chargebacks")

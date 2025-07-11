@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,23 +15,23 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/db"
 	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/importer"
 	"github.com/jjckrbbt/cdms/backend/internal/cdms_data/processor"
+	"github.com/jjckrbbt/cdms/backend/internal/db"
 )
 
 type UploadHandler struct {
 	importer  *importer.Importer
 	processor *processor.Processor
-	queries	  db.Querier
+	queries   db.Querier
 	logger    *slog.Logger
 }
 
-func NewUploadHandler(imp *importer.Importer, proc *processor.Processor, appLogger *slog.Logger) *UploadHandler {
+func NewUploadHandler(imp *importer.Importer, proc *processor.Processor, q db.Querier, appLogger *slog.Logger) *UploadHandler {
 	return &UploadHandler{
 		importer:  imp,
 		processor: proc,
-		queries:	q,
+		queries:   q,
 		logger:    appLogger.With("component", "cdms_api_handler"),
 	}
 }
@@ -50,12 +50,12 @@ func (h *UploadHandler) HandleGetUploads(c echo.Context) error {
 		limit = 25
 	}
 	page, err := strconv.Atoi(c.QueryParam("page"))
-	if err != nil || page <=0 {
+	if err != nil || page <= 0 {
 		page = 1
 	}
 	offset := (page - 1) * limit
 
-	params := db.ListUploadsParama{
+	params := db.ListUploadsParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	}
@@ -63,14 +63,14 @@ func (h *UploadHandler) HandleGetUploads(c echo.Context) error {
 	uploads, err := h.queries.ListUploads(ctx, params)
 	if err != nil {
 		h.logger.ErrorContext(ctx, "Failed to list uploads", "error", err)
-		return echo.NewHTTPError(http.StatusInternalServerError, Failed to retrieve upload history")
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve upload history")
 	}
 
 	return c.JSON(http.StatusOK, uploads)
 }
 
 func (h *UploadHandler) HandleGetRemovedRows(c echo.Context) error {
-	ctx := c.Request()Context()
+	ctx := c.Request().Context()
 	uploadIDStr := c.Param("id")
 	uploadID, err := uuid.Parse(uploadIDStr)
 	if err != nil {
@@ -81,10 +81,10 @@ func (h *UploadHandler) HandleGetRemovedRows(c echo.Context) error {
 
 	rows, err := h.queries.GetRemovedRowsByUploadID(ctx, pgUUID)
 	if err != nil {
-		if errors.Is(errors.Is(err, pgx.ErrNoRows){
+		if errors.Is(err, pgx.ErrNoRows) {
 			return c.JSON(http.StatusOK, []db.RemovedRowsLog{})
 		}
-		h.logger.ErrContext(ctx, "Failed to get removed rows for upload", uploadIDStr, "error", err)
+		h.logger.ErrorContext(ctx, "Failed to get removed rows for upload", uploadIDStr, "error", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve removed rows")
 	}
 
