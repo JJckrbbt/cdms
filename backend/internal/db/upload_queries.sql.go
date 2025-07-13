@@ -31,7 +31,7 @@ type CreateUploadParams struct {
 	Filename          string      `json:"filename"`
 	ReportType        string      `json:"report_type"`
 	Status            string      `json:"status"`
-	ProcessedByUserID pgtype.UUID `json:"processed_by_user_id"`
+	ProcessedByUserID int64       `json:"processed_by_user_id"`
 }
 
 // Create a record to track a new file upload
@@ -62,14 +62,43 @@ func (q *Queries) CreateUpload(ctx context.Context, arg CreateUploadParams) (Upl
 }
 
 const getUpload = `-- name: GetUpload :one
-SELECT id, storage_key, filename, report_type, status, uploaded_at, processed_at, error_details, processed_by_user_id, rows_upserted, rows_removed FROM uploads
-WHERE id = $1
+SELECT
+    u.id,
+    u.storage_key,
+    u.filename,
+    u.report_type,
+    u.status,
+    u.uploaded_at,
+    u.processed_at,
+    u.error_details,
+    u.rows_upserted,
+    u.rows_removed,
+    usr.first_name, 
+    usr.last_name
+FROM uploads u
+LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
+WHERE u.id = $1
 `
 
+type GetUploadRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	StorageKey   string             `json:"storage_key"`
+	Filename     string             `json:"filename"`
+	ReportType   string             `json:"report_type"`
+	Status       string             `json:"status"`
+	UploadedAt   pgtype.Timestamptz `json:"uploaded_at"`
+	ProcessedAt  pgtype.Timestamptz `json:"processed_at"`
+	ErrorDetails pgtype.Text        `json:"error_details"`
+	RowsUpserted pgtype.Int4        `json:"rows_upserted"`
+	RowsRemoved  pgtype.Int4        `json:"rows_removed"`
+	FirstName    pgtype.Text        `json:"first_name"`
+	LastName     pgtype.Text        `json:"last_name"`
+}
+
 // Retrieve a detailed summary for a specific upload
-func (q *Queries) GetUpload(ctx context.Context, id pgtype.UUID) (Upload, error) {
+func (q *Queries) GetUpload(ctx context.Context, id pgtype.UUID) (GetUploadRow, error) {
 	row := q.db.QueryRow(ctx, getUpload, id)
-	var i Upload
+	var i GetUploadRow
 	err := row.Scan(
 		&i.ID,
 		&i.StorageKey,
@@ -79,15 +108,30 @@ func (q *Queries) GetUpload(ctx context.Context, id pgtype.UUID) (Upload, error)
 		&i.UploadedAt,
 		&i.ProcessedAt,
 		&i.ErrorDetails,
-		&i.ProcessedByUserID,
 		&i.RowsUpserted,
 		&i.RowsRemoved,
+		&i.FirstName,
+		&i.LastName,
 	)
 	return i, err
 }
 
 const listUploads = `-- name: ListUploads :many
-SELECT id, storage_key, filename, report_type, status, uploaded_at, processed_at, error_details, processed_by_user_id, rows_upserted, rows_removed FROM uploads
+SELECT
+    u.id,
+    u.storage_key,
+    u.filename,
+    u.report_type,
+    u.status,
+    u.uploaded_at,
+    u.processed_at,
+    u.error_details,
+    u.rows_upserted,
+    u.rows_removed,
+    usr.first_name, 
+    usr.last_name
+FROM uploads u
+LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
 ORDER BY uploaded_at DESC
 LIMIT $1
 OFFSET $2
@@ -98,16 +142,31 @@ type ListUploadsParams struct {
 	Offset int32 `json:"offset"`
 }
 
+type ListUploadsRow struct {
+	ID           pgtype.UUID        `json:"id"`
+	StorageKey   string             `json:"storage_key"`
+	Filename     string             `json:"filename"`
+	ReportType   string             `json:"report_type"`
+	Status       string             `json:"status"`
+	UploadedAt   pgtype.Timestamptz `json:"uploaded_at"`
+	ProcessedAt  pgtype.Timestamptz `json:"processed_at"`
+	ErrorDetails pgtype.Text        `json:"error_details"`
+	RowsUpserted pgtype.Int4        `json:"rows_upserted"`
+	RowsRemoved  pgtype.Int4        `json:"rows_removed"`
+	FirstName    pgtype.Text        `json:"first_name"`
+	LastName     pgtype.Text        `json:"last_name"`
+}
+
 // Provides a paginated list of recent report uploads and their statuses
-func (q *Queries) ListUploads(ctx context.Context, arg ListUploadsParams) ([]Upload, error) {
+func (q *Queries) ListUploads(ctx context.Context, arg ListUploadsParams) ([]ListUploadsRow, error) {
 	rows, err := q.db.Query(ctx, listUploads, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Upload
+	var items []ListUploadsRow
 	for rows.Next() {
-		var i Upload
+		var i ListUploadsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.StorageKey,
@@ -117,9 +176,10 @@ func (q *Queries) ListUploads(ctx context.Context, arg ListUploadsParams) ([]Upl
 			&i.UploadedAt,
 			&i.ProcessedAt,
 			&i.ErrorDetails,
-			&i.ProcessedByUserID,
 			&i.RowsUpserted,
 			&i.RowsRemoved,
+			&i.FirstName,
+			&i.LastName,
 		); err != nil {
 			return nil, err
 		}

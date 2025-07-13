@@ -25,12 +25,40 @@ WHERE id = $1;
 
 -- name: GetUpload :one
 -- Retrieve a detailed summary for a specific upload 
-SELECT * FROM uploads
-WHERE id = $1;
+SELECT
+    u.id,
+    u.storage_key,
+    u.filename,
+    u.report_type,
+    u.status,
+    u.uploaded_at,
+    u.processed_at,
+    u.error_details,
+    u.rows_upserted,
+    u.rows_removed,
+    usr.first_name, 
+    usr.last_name
+FROM uploads u
+LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
+WHERE u.id = $1;
 
 -- name: ListUploads :many
 -- Provides a paginated list of recent report uploads and their statuses 
-SELECT * FROM uploads
+SELECT
+    u.id,
+    u.storage_key,
+    u.filename,
+    u.report_type,
+    u.status,
+    u.uploaded_at,
+    u.processed_at,
+    u.error_details,
+    u.rows_upserted,
+    u.rows_removed,
+    usr.first_name, 
+    usr.last_name
+FROM uploads u
+LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
 ORDER BY uploaded_at DESC
 LIMIT $1
 OFFSET $2;

@@ -919,7 +919,7 @@ type Upload struct {
 	UploadedAt        pgtype.Timestamptz `json:"uploaded_at"`
 	ProcessedAt       pgtype.Timestamptz `json:"processed_at"`
 	ErrorDetails      pgtype.Text        `json:"error_details"`
-	ProcessedByUserID pgtype.UUID        `json:"processed_by_user_id"`
+	ProcessedByUserID int64              `json:"processed_by_user_id"`
 	RowsUpserted      pgtype.Int4        `json:"rows_upserted"`
 	RowsRemoved       pgtype.Int4        `json:"rows_removed"`
 }
