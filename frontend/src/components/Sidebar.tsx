@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Bell, Home, LineChart, Settings, Upload } from "lucide-react";
+import { Bell, Home, LineChart, Settings, Upload, Gauge, BadgeInfo } from "lucide-react";
 import AppLogo from "@/assets/CDMSTransparent.png";
 import { Link } from "react-router-dom";
 
 interface SidebarProps {
-  // CHANGED: Made this prop optional with '?'
   onUploadReportClick?: () => void;
 }
 
@@ -27,7 +26,7 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
         </Link>
         <Link to="/dashboard" className="w-full">
           <Button variant="ghost" className="justify-start gap-2 w-full">
-            <Home className="h-4 w-4" />
+            <Gauge className="h-4 w-4" />
             Dashboard
           </Button>
         </Link>
@@ -51,15 +50,14 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
       {/* Admin and Upload Navigation */}
       <div className="pt-4 border-t">
         <nav className="flex flex-col gap-2">
-          {/* This button now correctly uses the optional prop */}
           <Button variant="ghost" className="justify-start gap-2" onClick={onUploadReportClick}>
             <Upload className="h-4 w-4" />
-            Upload Report
+            Submit Report
           </Button>
           <Link to="/uploads" className="w-full">
             <Button variant="ghost" className="justify-start gap-2 w-full">
-              <Upload className="h-4 w-4" />
-              Uploads
+              <BadgeInfo className="h-4 w-4" />
+              Upload Reporting
             </Button>
           </Link>
           <Button variant="ghost" className="justify-start gap-2">
