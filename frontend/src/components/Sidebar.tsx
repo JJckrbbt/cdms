@@ -22,6 +22,12 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
         <Link to="/" className="w-full">
           <Button variant="ghost" className="justify-start gap-2 w-full">
             <Home className="h-4 w-4" />
+            Home
+          </Button>
+        </Link>
+        <Link to="/dashboard" className="w-full">
+          <Button variant="ghost" className="justify-start gap-2 w-full">
+            <Home className="h-4 w-4" />
             Dashboard
           </Button>
         </Link>

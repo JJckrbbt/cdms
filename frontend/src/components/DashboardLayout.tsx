@@ -16,6 +16,7 @@ import { PanelLeft, Sun, Moon } from "lucide-react";
 import { UploadReportModal } from "./UploadReportModal";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "../hooks/useTheme";
+import { Link } from 'react-router-dom';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,6 +58,9 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
           
           {/* Header Actions */}
           <div className="flex w-full items-center gap-4 justify-end">
+            <Link to="/about" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              About
+            </Link>
             <div className="flex items-center space-x-2">
               {theme === "light" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               <Switch
