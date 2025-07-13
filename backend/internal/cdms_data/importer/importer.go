@@ -79,11 +79,12 @@ func (i *Importer) StoreFile(ctx context.Context, fileHeader *multipart.FileHead
 	queries := db.New(i.dbClient.Pool)
 
 	params := db.CreateUploadParams{
-		ID:         pgtype.UUID{Bytes: uploadID, Valid: true},
-		StorageKey: gcsObjectKey,
-		Filename:   fileHeader.Filename,
-		ReportType: reportType,
-		Status:     "UPLOADED",
+		ID:                pgtype.UUID{Bytes: uploadID, Valid: true},
+		StorageKey:        gcsObjectKey,
+		Filename:          fileHeader.Filename,
+		ReportType:        reportType,
+		Status:            "UPLOADED",
+		ProcessedByUserID: 1, // Assuming a default user ID for now; this should be replaced with actual user ID logic.,
 	}
 
 	createdUpload, err := queries.CreateUpload(ctx, params)

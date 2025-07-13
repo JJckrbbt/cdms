@@ -20,3 +20,7 @@ pnpm-debug.log*
 /frontend/.vscode
 .idea
 
+# Cloud Configure
+goose_up.sh
+goose_down.sh
+
