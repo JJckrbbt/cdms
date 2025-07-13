@@ -6,6 +6,7 @@ import { DelinquenciesPage } from "./pages/DelinquenciesPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LandingPage } from "./pages/LandingPage";
 import { AboutPage } from './pages/AboutPage';
+import UploadsPage from './pages/UploadsPage';
 
 function App() {
   const handleUploadSuccess = () => {
@@ -29,6 +30,7 @@ function App() {
           <Route path="/chargebacks" element={<ChargebacksPage />} />
           <Route path="/delinquencies" element={<DelinquenciesPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/uploads" element={<UploadsPage />} />
         </Route>
       </Routes>
       <Toaster />

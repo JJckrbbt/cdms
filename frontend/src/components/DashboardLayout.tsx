@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-// FIXED: Removed the unused 'Upload' import
 import { PanelLeft, Sun, Moon } from "lucide-react";
 import { UploadReportModal } from "./UploadReportModal";
 import { Switch } from "@/components/ui/switch";
@@ -51,7 +50,6 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="p-0 w-64">
-                {/* FIXED: Passed the required prop to the Sidebar in the mobile view */}
               <Sidebar onUploadReportClick={handleUploadReportClick} />
             </SheetContent>
           </Sheet>

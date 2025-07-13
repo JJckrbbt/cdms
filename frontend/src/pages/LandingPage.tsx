@@ -51,7 +51,7 @@ export const LandingPage: React.FC = () => {
         </DropdownMenu>
       </div>
       <h1 className="text-5xl font-bold">Welcome to CDMS</h1>
-      <p className="mt-4 text-lg">Your Centralized Dispute Management System</p>
+      <p className="mt-4 text-lg">A Chargeback & Delinquency Management System</p>
       <div className="mt-8">
         <a href="/dashboard" className="px-6 py-3 text-lg font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
           Go to Dashboard

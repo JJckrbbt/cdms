@@ -52,7 +52,7 @@ export function Sidebar({ onUploadReportClick }: SidebarProps) {
         <nav className="flex flex-col gap-2">
           <Button variant="ghost" className="justify-start gap-2" onClick={onUploadReportClick}>
             <Upload className="h-4 w-4" />
-            Submit Report
+            Upload Report
           </Button>
           <Link to="/uploads" className="w-full">
             <Button variant="ghost" className="justify-start gap-2 w-full">
