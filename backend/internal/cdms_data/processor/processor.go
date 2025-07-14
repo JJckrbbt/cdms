@@ -268,7 +268,7 @@ func (p *Processor) executeMergeTransaction(ctx context.Context, uploadID string
 			if err := q.DeactivateChargebacksBySource(ctx, db.ChargebackReportingSource(reportType)); err != nil {
 				return 0, err
 			}
-			columnNames := []string{"reporting_source", "fund", "business_line", "region", "location_system", "program", "al_num", "source_num", "agreement_num", "title", "alc", "customer_tas", "task_subtask", "class_id", "customer_name", "org_code", "document_date", "accomp_date", "assigned_rebill_drn", "chargeback_amount", "statement", "bd_doc_num", "vendor", "articles_services", "current_status", "reason_code", "action", "is_active"}
+			columnNames := []string{"reporting_source", "fund", "business_line", "region", "location_system", "program", "al_num", "source_num", "agreement_num", "title", "alc", "customer_tas", "task_subtask", "class_id", "customer_name", "org_code", "document_date", "accomp_date", "assigned_rebill_drn", "chargeback_amount", "statement", "bd_doc_num", "vendor", "articles_services", "reason_code", "action", "is_active"}
 			_, err = tx.CopyFrom(ctx, pgx.Identifier{"temp_chargeback_staging"}, columnNames, newChargebackCopySource(chargebacks))
 			if err != nil {
 				return 0, fmt.Errorf("failed to stage chargebacks: %w", err)
@@ -341,7 +341,7 @@ func (s *chargebackCopySource) Next() bool {
 }
 func (s *chargebackCopySource) Values() ([]any, error) {
 	row := s.rows[s.idx]
-	return []any{row.ReportingSource, row.Fund, row.BusinessLine, row.Region, row.LocationSystem, row.Program, row.ALNum, row.SourceNum, row.AgreementNum, row.Title, row.ALC, row.CustomerTAS, row.TaskSubtask, row.ClassID, row.CustomerName, row.OrgCode, row.DocumentDate, row.AccompDate, row.AssignedRebillDRN, row.ChargebackAmount, row.Statement, row.BDDocNum, row.Vendor, row.ArticlesServices, row.CurrentStatus, row.ReasonCode, row.Action, row.IsActive}, nil
+	return []any{row.ReportingSource, row.Fund, row.BusinessLine, row.Region, row.LocationSystem, row.Program, row.ALNum, row.SourceNum, row.AgreementNum, row.Title, row.ALC, row.CustomerTAS, row.TaskSubtask, row.ClassID, row.CustomerName, row.OrgCode, row.DocumentDate, row.AccompDate, row.AssignedRebillDRN, row.ChargebackAmount, row.Statement, row.BDDocNum, row.Vendor, row.ArticlesServices, row.ReasonCode, row.Action, row.IsActive}, nil
 }
 func (s *chargebackCopySource) Err() error { return nil }
 
