@@ -22,15 +22,21 @@ async function getData(): Promise<Upload[]> {
 
 export default function UploadsPage() {
   const [data, setData] = useState<Upload[]>([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     getData().then(setData);
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Uploads</h1>
-      <DataTable columns={columns} data={data} />
-    </div>
+    <DataTable
+      columns={columns}
+      data={data}
+      title="Uploads"
+      description="View the status of your recent uploads."
+      page={page}
+      setPage={setPage}
+      hasMore={false}
+    />
   );
 };
