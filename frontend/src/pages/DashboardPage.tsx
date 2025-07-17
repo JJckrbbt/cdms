@@ -67,7 +67,7 @@ export function DashboardPage() {
     fetchDashboardData();
   }, []);
 
-  if (!dashboardData) {
+  if (!dashboardData || !dashboardData.chargeback_status_summary || !dashboardData.nonipac_status_summary || !dashboardData.chargeback_time_windows || !dashboardData.nonipac_aging_schedule) {
     return <p>Loading dashboard...</p>;
   }
 

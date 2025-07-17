@@ -21,5 +21,6 @@ pnpm-debug.log*
 .idea
 
 # Cloud Configure
+cloud_sql_proxy
 goose_up.sh
 goose_down.sh
