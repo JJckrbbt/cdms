@@ -21,8 +21,8 @@ import (
 	"github.com/getsentry/sentry-go"
 	sentryecho "github.com/getsentry/sentry-go/echo"
 	"github.com/google/uuid"
-	"github.com/labstack/echo/v4"            // NEW: Echo framework
-	"github.com/labstack/echo/v4/middleware" // NEW: Echo middleware
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -96,8 +96,6 @@ func main() {
 	e := echo.New()
 
 	// Configure Echo's logger to use our slog instance.
-	// This makes Echo's internal messages (e.g., startup, route not found) use slog.
-	// For per-request logging, we'll use our own custom middleware or log directly in handlers.
 	e.Logger.SetOutput(io.Discard)
 	e.Logger.SetLevel(0)   // Set to 0 to disable logging, we use slog
 	e.Logger.SetHeader("") // Remove default header, slog adds better ones
@@ -105,7 +103,7 @@ func main() {
 	// 7. Register Middleware.
 	// Recover middleware: Recovers from panics anywhere in the chain and handles the error.
 	e.Use(middleware.Recover())
-	// CORS middleware: Essential for React frontend.
+	// CORS middleware
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{"http://localhost:5173", "http://34.8.206.198", "https://cdms-backend-414620627769.us-central1.run.app", "https://cdms.jjckrbbt.dev"}, // Replace with your React dev server URL
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPatch, http.MethodPut, http.MethodDelete, http.MethodOptions},
