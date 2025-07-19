@@ -1,9 +1,9 @@
 -- +goose Up
 
 -- Insert the system user if it doesn't already exist.
-INSERT INTO "user" (first_name, last_name, org, email, is_admin)
+INSERT INTO "cdms_user" (first_name, last_name, org, email, is_admin)
 SELECT 'System', 'User', 'GSA', 'system@cdms.local', TRUE
-WHERE NOT EXISTS (SELECT 1 FROM "user" WHERE email = 'system@cdms.local');
+WHERE NOT EXISTS (SELECT 1 FROM "cdms_user" WHERE email = 'system@cdms.local');
 
 -- +goose StatementBegin
 -- Re-create the function to include all logic, removing the need for a WHEN clause on the trigger.
@@ -23,7 +23,7 @@ BEGIN
     -- At this point, we know it's an INSERT or a status-changing UPDATE.
 
     -- Find the ID of our stable system user.
-    SELECT id INTO system_user_id FROM "user" WHERE email = 'system@cdms.local';
+    SELECT id INTO system_user_id FROM "cdms_user" WHERE email = 'system@cdms.local';
 
     -- Try to get the user_id from the current session's settings.
     BEGIN

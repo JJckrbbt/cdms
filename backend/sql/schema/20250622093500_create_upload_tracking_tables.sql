@@ -10,7 +10,7 @@ CREATE TABLE "uploads" (
     "uploaded_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- 
     "processed_at" TIMESTAMPTZ, -- 
     "error_details" TEXT, -- 
-    "processed_by_user_id" BIGINT NOT NULL REFERENCES "user" ("id"),
+    "processed_by_user_id" BIGINT NOT NULL REFERENCES "cdms_user" ("id"),
     "rows_upserted" INTEGER,
     "rows_removed" INTEGER
 );

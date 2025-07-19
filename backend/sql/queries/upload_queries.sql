@@ -39,7 +39,7 @@ SELECT
     usr.first_name, 
     usr.last_name
 FROM uploads u
-LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
+LEFT JOIN "cdms_user" usr ON u.processed_by_user_id = usr.id
 WHERE u.id = $1;
 
 -- name: ListUploads :many
@@ -58,7 +58,7 @@ SELECT
     usr.first_name, 
     usr.last_name
 FROM uploads u
-LEFT JOIN "user" usr ON u.processed_by_user_id = usr.id
+LEFT JOIN "cdms_user" usr ON u.processed_by_user_id = usr.id
 ORDER BY uploaded_at DESC
 LIMIT $1
 OFFSET $2;

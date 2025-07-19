@@ -21,7 +21,7 @@ BEFORE UPDATE ON "nonipac"
 FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp_func();
 
 CREATE TRIGGER set_user_updated_at
-BEFORE UPDATE ON "user"
+BEFORE UPDATE ON "cdms_user"
 FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp_func();
 
 CREATE TRIGGER set_customer_poc_updated_at
@@ -45,7 +45,7 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at_timestamp_func();
 DROP TRIGGER IF EXISTS set_agency_bureau_updated_at ON "agency_bureau";
 DROP TRIGGER IF EXISTS set_comments_updated_at ON "comments";
 DROP TRIGGER IF EXISTS set_customer_poc_updated_at ON "customer_poc";
-DROP TRIGGER IF EXISTS set_user_updated_at ON "user";
+DROP TRIGGER IF EXISTS set_user_updated_at ON "cdms_user";
 DROP TRIGGER IF EXISTS set_nonipac_updated_at ON "nonipac";
 DROP TRIGGER IF EXISTS set_chargeback_updated_at ON "chargeback";
 

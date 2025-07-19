@@ -1,7 +1,7 @@
 -- +goose Up
 -- Create the audit table for user changes
 
-CREATE TABLE audit.user_changes (
+CREATE TABLE audit.cdms_user_changes (
     audit_id BIGSERIAL PRIMARY KEY,
     target_id BIGINT NOT NULL, -- The ID of the user record being audited
     operation CHAR(1) NOT NULL, -- 'I' (Insert), 'U' (Update), 'D' (Delete)
@@ -12,11 +12,11 @@ CREATE TABLE audit.user_changes (
 );
 
 -- Add index for efficient lookup by user ID
-CREATE INDEX idx_audit_user_target_id ON audit.user_changes (target_id);
+CREATE INDEX idx_audit_user_target_id ON audit.cdms_user_changes (target_id);
 -- Add index for chronological ordering
-CREATE INDEX idx_audit_user_changed_at ON audit.user_changes (changed_at DESC);
+CREATE INDEX idx_audit_user_changed_at ON audit.cdms_user_changes (changed_at DESC);
 
 -- +goose Down
 -- Drop the audit table for user changes
 
-DROP TABLE IF EXISTS audit.user_changes;
+DROP TABLE IF EXISTS audit.cdms_user_changes;

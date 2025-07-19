@@ -48,7 +48,7 @@ SELECT * FROM nonipac
 WHERE id = $1 LIMIT 1;
 
 -- name: GetUserByEmail :one
-SELECT * FROM "user" WHERE email = $1;
+SELECT * FROM "cdms_user" WHERE email = $1;
 
 -- name: GetStatusHistoryForChargeback :many
 -- Fetches Status History for Chargebacks
@@ -66,7 +66,7 @@ FROM
 JOIN
     "chargeback_status_merge" csm ON sh.id = csm.status_history_id
 JOIN
-    "user" u ON sh.user_id = u.id
+    "cdms_user" u ON sh.user_id = u.id
 WHERE
     csm.chargeback_id = $1 
 ORDER BY
@@ -88,7 +88,7 @@ FROM
 JOIN
     "nonipac_status_merge" nsm ON sh.id = nsm.status_history_id
 JOIN
-    "user" u ON sh.user_id = u.id
+    "cdms_user" u ON sh.user_id = u.id
 WHERE
     nsm.nonipac_id = $1 
 ORDER BY

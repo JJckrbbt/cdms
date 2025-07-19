@@ -6,12 +6,12 @@ ALTER TABLE "chargeback" ADD FOREIGN KEY ("vendor") REFERENCES "agency_bureau" (
 
 -- nonipac foreign keys
 ALTER TABLE "nonipac" ADD FOREIGN KEY ("address_code") REFERENCES "agency_bureau" ("vendor_code");
-ALTER TABLE "nonipac" ADD FOREIGN KEY ("pfs_poc") REFERENCES "user" ("id");
-ALTER TABLE "nonipac" ADD FOREIGN KEY ("gsa_poc") REFERENCES "user" ("id");
+ALTER TABLE "nonipac" ADD FOREIGN KEY ("pfs_poc") REFERENCES "cdms_user" ("id");
+ALTER TABLE "nonipac" ADD FOREIGN KEY ("gsa_poc") REFERENCES "cdms_user" ("id");
 ALTER TABLE "nonipac" ADD FOREIGN KEY ("customer_poc") REFERENCES "customer_poc" ("id");
 
 -- status_history foreign keys
-ALTER TABLE "status_history" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "status_history" ADD FOREIGN KEY ("user_id") REFERENCES "cdms_user" ("id");
 
 -- chargeback_status_merge foreign keys
 ALTER TABLE "chargeback_status_merge" ADD FOREIGN KEY ("chargeback_id") REFERENCES "chargeback" ("id");
@@ -22,11 +22,11 @@ ALTER TABLE "nonipac_status_merge" ADD FOREIGN KEY ("nonipac_id") REFERENCES "no
 ALTER TABLE "nonipac_status_merge" ADD FOREIGN KEY ("status_history_id") REFERENCES "status_history" ("id");
 
 -- issue_owner_gsa_chargeback_merge foreign keys
-ALTER TABLE "issue_owner_gsa_chargeback_merge" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "issue_owner_gsa_chargeback_merge" ADD FOREIGN KEY ("user_id") REFERENCES "cdms_user" ("id");
 ALTER TABLE "issue_owner_gsa_chargeback_merge" ADD FOREIGN KEY ("chargeback_id") REFERENCES "chargeback" ("id");
 
 -- issue_owner_pfs_chargeback_merge foreign keys
-ALTER TABLE "issue_owner_pfs_chargeback_merge" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "issue_owner_pfs_chargeback_merge" ADD FOREIGN KEY ("user_id") REFERENCES "cdms_user" ("id");
 ALTER TABLE "issue_owner_pfs_chargeback_merge" ADD FOREIGN KEY ("chargeback_id") REFERENCES "chargeback" ("id");
 
 -- non_ipac_customer_poc_merge foreign keys
@@ -38,7 +38,7 @@ ALTER TABLE "chargeback_customer_poc_merge" ADD FOREIGN KEY ("chargeback_id") RE
 ALTER TABLE "chargeback_customer_poc_merge" ADD FOREIGN KEY ("customer_poc_id") REFERENCES "customer_poc" ("id");
 
 -- comments foreign keys
-ALTER TABLE "comments" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "comments" ADD FOREIGN KEY ("user_id") REFERENCES "cdms_user" ("id");
 
 -- chargeback_comments_merge foreign keys
 ALTER TABLE "chargeback_comments_merge" ADD FOREIGN KEY ("chargeback_id") REFERENCES "chargeback" ("id");
@@ -50,7 +50,7 @@ ALTER TABLE "non_ipac_comments_merge" ADD FOREIGN KEY ("comment_id") REFERENCES 
 
 -- comment_mentions foreign keys
 ALTER TABLE "comment_mentions" ADD FOREIGN KEY ("comment_id") REFERENCES "comments" ("id");
-ALTER TABLE "comment_mentions" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+ALTER TABLE "comment_mentions" ADD FOREIGN KEY ("user_id") REFERENCES "cdms_user" ("id");
 
 
 -- +goose Down

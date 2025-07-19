@@ -551,6 +551,16 @@ type AgencyBureau struct {
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
+type AuditCdmsUserChange struct {
+	AuditID   int64              `json:"audit_id"`
+	TargetID  int64              `json:"target_id"`
+	Operation string             `json:"operation"`
+	ChangedBy pgtype.Int8        `json:"changed_by"`
+	ChangedAt pgtype.Timestamptz `json:"changed_at"`
+	OldData   []byte             `json:"old_data"`
+	NewData   []byte             `json:"new_data"`
+}
+
 type AuditChargebackChange struct {
 	AuditID   int64              `json:"audit_id"`
 	TargetID  int64              `json:"target_id"`
@@ -571,14 +581,16 @@ type AuditNonipacChange struct {
 	NewData   []byte             `json:"new_data"`
 }
 
-type AuditUserChange struct {
-	AuditID   int64              `json:"audit_id"`
-	TargetID  int64              `json:"target_id"`
-	Operation string             `json:"operation"`
-	ChangedBy pgtype.Int8        `json:"changed_by"`
-	ChangedAt pgtype.Timestamptz `json:"changed_at"`
-	OldData   []byte             `json:"old_data"`
-	NewData   []byte             `json:"new_data"`
+type CdmsUser struct {
+	ID        int64              `json:"id"`
+	FirstName string             `json:"first_name"`
+	LastName  string             `json:"last_name"`
+	Org       UserOrg            `json:"org"`
+	Email     string             `json:"email"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	IsActive  bool               `json:"is_active"`
+	IsAdmin   bool               `json:"is_admin"`
 }
 
 type Chargeback struct {
@@ -922,18 +934,6 @@ type Upload struct {
 	ProcessedByUserID int64              `json:"processed_by_user_id"`
 	RowsUpserted      pgtype.Int4        `json:"rows_upserted"`
 	RowsRemoved       pgtype.Int4        `json:"rows_removed"`
-}
-
-type User struct {
-	ID        int64              `json:"id"`
-	FirstName string             `json:"first_name"`
-	LastName  string             `json:"last_name"`
-	Org       UserOrg            `json:"org"`
-	Email     string             `json:"email"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-	IsActive  bool               `json:"is_active"`
-	IsAdmin   bool               `json:"is_admin"`
 }
 
 type UserBusinessLineAccess struct {

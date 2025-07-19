@@ -325,7 +325,7 @@ FROM
 JOIN
     "chargeback_status_merge" csm ON sh.id = csm.status_history_id
 JOIN
-    "user" u ON sh.user_id = u.id
+    "cdms_user" u ON sh.user_id = u.id
 WHERE
     csm.chargeback_id = $1 
 ORDER BY
@@ -388,7 +388,7 @@ FROM
 JOIN
     "nonipac_status_merge" nsm ON sh.id = nsm.status_history_id
 JOIN
-    "user" u ON sh.user_id = u.id
+    "cdms_user" u ON sh.user_id = u.id
 WHERE
     nsm.nonipac_id = $1 
 ORDER BY
@@ -437,12 +437,12 @@ func (q *Queries) GetStatusHistoryForDelinquencies(ctx context.Context, nonipacI
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, org, email, created_at, updated_at, is_active, is_admin FROM "user" WHERE email = $1
+SELECT id, first_name, last_name, org, email, created_at, updated_at, is_active, is_admin FROM "cdms_user" WHERE email = $1
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CdmsUser, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i CdmsUser
 	err := row.Scan(
 		&i.ID,
 		&i.FirstName,
