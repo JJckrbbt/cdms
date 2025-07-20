@@ -16,6 +16,7 @@ import { UploadReportModal } from "./UploadReportModal";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "../hooks/useTheme";
 import { Link } from 'react-router-dom';
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -26,6 +27,9 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user, isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
+
+  console.log({ isLoading, isAuthenticated, user });
 
   const handleUploadReportClick = () => {
     setIsMobileMenuOpen(false);
@@ -66,6 +70,11 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                 onCheckedChange={toggleTheme}
               />
             </div>
+            {!isAuthenticated && !isLoading && (
+              <Button onClick={() => loginWithRedirect()}>Log In</Button>
+            )}
+
+            {isAuthenticated && user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -74,19 +83,23 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                   className="rounded-full"
                 >
                   <Avatar>
-                    <AvatarImage src="../assets/jjckrbbt.png" alt="@jjckrbbt" />
-                    <AvatarFallback>JJ</AvatarFallback>
+                    <AvatarImage src={user.picture} alt={user.name} />
+                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem
+                    onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                   >
+                    Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
           </div>
           </header>
 

@@ -3,6 +3,8 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Chargeback, columns } from "@/components/chargebacks/columns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DetailsDrawer } from "@/components/DetailsDrawer";
+import { useAuth0 } from "@auth0/auth0-react";
+import { createApiClient } from "@/lib/api";
 
 const PAGE_SIZE = 500;
 
@@ -26,12 +28,13 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
   const [hasMore, setHasMore] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedChargeback, setSelectedChargeback] = useState<Chargeback | null>(null);
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 
   const fetchChargebacks = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`);
-      const responseData = await response.json();
-      
+      const apiClient = createApiClient(getAccessTokenSilently);
+      const responseData = await apiClient.get(`/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`);
+
       if (responseData && Array.isArray(responseData.data)) {
         setChargebacks(responseData.data);
         setHasMore(responseData.data.length === PAGE_SIZE);
@@ -48,8 +51,10 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
   };
 
   useEffect(() => {
+  if (isAuthenticated) {
     fetchChargebacks();
-  }, [page]);
+  }
+}, [page, isAuthenticated]);
 
   const handleRowClick = (chargeback: Chargeback) => {
     setSelectedChargeback(chargeback);
@@ -69,6 +74,7 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
 
   const handleSaveChargeback = async (updatedData: Chargeback) => {
     try {
+      const apiClient = createApiClient(getAccessTokenSilently);
       if (typeof updatedData.id !== 'number') {
         console.error("Invalid ID for chargeback update:", updatedData.id);
         return;
@@ -87,19 +93,7 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
         chargeback_amount: updatedData.chargeback_amount,
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/chargebacks/${updatedData.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        console.error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await apiClient.patch(`/api/chargebacks/${updatedData.id}`, payload);
 
       // Refresh the data after successful update
       fetchChargebacks();
