@@ -582,15 +582,16 @@ type AuditNonipacChange struct {
 }
 
 type CdmsUser struct {
-	ID        int64              `json:"id"`
-	FirstName string             `json:"first_name"`
-	LastName  string             `json:"last_name"`
-	Org       UserOrg            `json:"org"`
-	Email     string             `json:"email"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-	IsActive  bool               `json:"is_active"`
-	IsAdmin   bool               `json:"is_admin"`
+	ID                  int64              `json:"id"`
+	AuthProviderSubject string             `json:"auth_provider_subject"`
+	Email               string             `json:"email"`
+	FirstName           string             `json:"first_name"`
+	LastName            string             `json:"last_name"`
+	Org                 UserOrg            `json:"org"`
+	IsActive            bool               `json:"is_active"`
+	IsAdmin             bool               `json:"is_admin"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }
 
 type Chargeback struct {

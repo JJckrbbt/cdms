@@ -23,6 +23,7 @@ type Querier interface {
 	CreateDelinquency(ctx context.Context, arg CreateDelinquencyParams) (Nonipac, error)
 	// Create a record to track a new file upload
 	CreateUpload(ctx context.Context, arg CreateUploadParams) (Upload, error)
+	CreateUserFromAuthProvider(ctx context.Context, arg CreateUserFromAuthProviderParams) (CdmsUser, error)
 	// Mark all existing chargebacks from a specific report source as inactive before an UPSERT
 	DeactivateChargebacksBySource(ctx context.Context, reportingSource ChargebackReportingSource) error
 	DeactivateNonIpacsBySource(ctx context.Context, reportingSource NonipacReportingSource) error
@@ -63,6 +64,7 @@ type Querier interface {
 	GetStatusHistoryForDelinquencies(ctx context.Context, nonipacID int64) ([]GetStatusHistoryForDelinquenciesRow, error)
 	// Retrieve a detailed summary for a specific upload
 	GetUpload(ctx context.Context, id pgtype.UUID) (GetUploadRow, error)
+	GetUserByAuthProviderSubject(ctx context.Context, authProviderSubject string) (CdmsUser, error)
 	GetUserByEmail(ctx context.Context, email string) (CdmsUser, error)
 	// //go:generate mockery --name Querier --output ./mocks --outpkg mocks
 	// Fetches a paginated list from the active_chargebacks_with_vendor_info view.

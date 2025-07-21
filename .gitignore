@@ -2,6 +2,7 @@
 # Environment variables
 .env
 .env*.local
+seed.sql
 
 # Log files
 npm-debug.log*
@@ -24,3 +25,4 @@ pnpm-debug.log*
 cloud_sql_proxy
 goose_up.sh
 goose_down.sh
+

@@ -264,3 +264,48 @@ func (q *Queries) CreateDelinquency(ctx context.Context, arg CreateDelinquencyPa
 	)
 	return i, err
 }
+
+const createUserFromAuthProvider = `-- name: CreateUserFromAuthProvider :one
+INSERT INTO "cdms_user" (
+    auth_provider_subject, 
+    email,
+    first_name,
+    last_name,
+    org
+) VALUES (
+    $1, $2, $3, $4, $5
+)
+RETURNING id, auth_provider_subject, email, first_name, last_name, org, is_active, is_admin, updated_at, created_at
+`
+
+type CreateUserFromAuthProviderParams struct {
+	AuthProviderSubject string  `json:"auth_provider_subject"`
+	Email               string  `json:"email"`
+	FirstName           string  `json:"first_name"`
+	LastName            string  `json:"last_name"`
+	Org                 UserOrg `json:"org"`
+}
+
+func (q *Queries) CreateUserFromAuthProvider(ctx context.Context, arg CreateUserFromAuthProviderParams) (CdmsUser, error) {
+	row := q.db.QueryRow(ctx, createUserFromAuthProvider,
+		arg.AuthProviderSubject,
+		arg.Email,
+		arg.FirstName,
+		arg.LastName,
+		arg.Org,
+	)
+	var i CdmsUser
+	err := row.Scan(
+		&i.ID,
+		&i.AuthProviderSubject,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.Org,
+		&i.IsActive,
+		&i.IsAdmin,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}

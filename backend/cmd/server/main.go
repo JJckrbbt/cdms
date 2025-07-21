@@ -111,7 +111,17 @@ func main() {
 		// Add AllowCredentials: true if you send cookies/credentials
 	}))
 
-	// Custom Request Logger Middleware (Optional, but recommended for consistent request logging)
+	// --- Auth Middleware Setup ---
+	authMiddleware, err := api.NewAuthMiddleware(cfg.Auth0Domain, cfg.Auth0Audience, realQuerier, appLogger)
+	if err != nil {
+		appLogger.Error("Failed to initialize auth middleware", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	apiGroup := e.Group("/api")
+	apiGroup.Use(authMiddleware.ValidateRequest)
+	//-------------------------------
+	// Request Logger Middleware (For consistent request logging)
 	// This logs basic request info using our slog instance.
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -170,18 +180,16 @@ func main() {
 		return c.String(http.StatusOK, "OK") // Return string response for success
 	})
 
-	// Unified API upload endpoint using Echo's path parameters
-	// ":reportType" captures the value from the URL path.
 	//Upload group
-	e.POST("/api/upload/:reportType", uploadHandler.HandleUpload)
+	apiGroup.POST("/upload/:reportType", uploadHandler.HandleUpload)
 
 	//Upload Reporting Group
-	uploadRoutes := e.Group("/api/uploads")
+	uploadRoutes := apiGroup.Group("/uploads")
 	uploadRoutes.GET("", uploadHandler.HandleGetUploads)
 	uploadRoutes.GET("/removed_rows/:id", uploadHandler.HandleGetRemovedRows)
 
 	//Chargeback group
-	chargebackRoutes := e.Group("/api/chargebacks")
+	chargebackRoutes := apiGroup.Group("/chargebacks")
 	chargebackRoutes.GET("", chargebackHandler.HandleGetChargebacks)
 	chargebackRoutes.GET("/:id", chargebackHandler.HandleGetByID)
 	chargebackRoutes.GET("/history/:id", chargebackHandler.HandleChargebackStatus)
@@ -189,7 +197,7 @@ func main() {
 	chargebackRoutes.PATCH("/:id", chargebackHandler.HandleUpdate)
 
 	//Delinquency group
-	delinquencyRoutes := e.Group("/api/delinquencies")
+	delinquencyRoutes := apiGroup.Group("/delinquencies")
 	delinquencyRoutes.GET("", delinquencyHandler.HandleGetDelinquencies)
 	delinquencyRoutes.GET("/:id", delinquencyHandler.HandleGetByID)
 	delinquencyRoutes.GET("/history/:id", delinquencyHandler.HandleDelinquencyStatus)
@@ -197,13 +205,17 @@ func main() {
 	delinquencyRoutes.PATCH("/:id", delinquencyHandler.HandleUpdate)
 
 	//Dashbord group
-	e.GET("/api/dashboard", dashboardHandler.HandleGetDashboardStats)
+	apiGroup.GET("/dashboard", dashboardHandler.HandleGetDashboardStats)
 
 	e.GET("/foo", func(ctx echo.Context) error {
 		// sentryecho handler will catch it just fine. Also, because we attached "someRandomTag"
 		// in the middleware before, it will be sent through as well
 		panic("y tho")
 	})
+
+	for _, route := range e.Routes() {
+		appLogger.Info("Registered Route", "method", route.Method, "path", route.Path)
+	}
 
 	// 9. Start the HTTP server.
 	port := os.Getenv("PORT")

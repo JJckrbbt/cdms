@@ -50,6 +50,9 @@ WHERE id = $1 LIMIT 1;
 -- name: GetUserByEmail :one
 SELECT * FROM "cdms_user" WHERE email = $1;
 
+-- name: GetUserByAuthProviderSubject :one
+SELECT * FROM "cdms_user" WHERE auth_provider_subject = $1;
+
 -- name: GetStatusHistoryForChargeback :many
 -- Fetches Status History for Chargebacks
 SELECT

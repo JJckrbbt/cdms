@@ -1,8 +1,8 @@
 -- +goose Up
 
 -- Insert the system user if it doesn't already exist.
-INSERT INTO "cdms_user" (first_name, last_name, org, email, is_admin)
-SELECT 'System', 'User', 'GSA', 'system@cdms.local', TRUE
+INSERT INTO "cdms_user" (first_name, last_name, org, email, is_admin, auth_provider_subject)
+SELECT 'System', 'User', 'GSA', 'system@cdms.local', TRUE, 'system|internal'
 WHERE NOT EXISTS (SELECT 1 FROM "cdms_user" WHERE email = 'system@cdms.local');
 
 -- +goose StatementBegin

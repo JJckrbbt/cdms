@@ -436,8 +436,30 @@ func (q *Queries) GetStatusHistoryForDelinquencies(ctx context.Context, nonipacI
 	return items, nil
 }
 
+const getUserByAuthProviderSubject = `-- name: GetUserByAuthProviderSubject :one
+SELECT id, auth_provider_subject, email, first_name, last_name, org, is_active, is_admin, updated_at, created_at FROM "cdms_user" WHERE auth_provider_subject = $1
+`
+
+func (q *Queries) GetUserByAuthProviderSubject(ctx context.Context, authProviderSubject string) (CdmsUser, error) {
+	row := q.db.QueryRow(ctx, getUserByAuthProviderSubject, authProviderSubject)
+	var i CdmsUser
+	err := row.Scan(
+		&i.ID,
+		&i.AuthProviderSubject,
+		&i.Email,
+		&i.FirstName,
+		&i.LastName,
+		&i.Org,
+		&i.IsActive,
+		&i.IsAdmin,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, org, email, created_at, updated_at, is_active, is_admin FROM "cdms_user" WHERE email = $1
+SELECT id, auth_provider_subject, email, first_name, last_name, org, is_active, is_admin, updated_at, created_at FROM "cdms_user" WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CdmsUser, error) {
@@ -445,14 +467,15 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (CdmsUser, e
 	var i CdmsUser
 	err := row.Scan(
 		&i.ID,
+		&i.AuthProviderSubject,
+		&i.Email,
 		&i.FirstName,
 		&i.LastName,
 		&i.Org,
-		&i.Email,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 		&i.IsActive,
 		&i.IsAdmin,
+		&i.UpdatedAt,
+		&i.CreatedAt,
 	)
 	return i, err
 }
