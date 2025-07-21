@@ -5,6 +5,9 @@ import { Scale, ReceiptText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
+import { useAuth0 } from "@auth0/auth0-react";
+import { apiClient } from "@/lib/api";
+
 
 // --- Data Structures from API ---
 interface StatusSummary {
@@ -52,22 +55,29 @@ type TimeWindowKey = keyof DashboardData['chargeback_time_windows'];
 // --- Component ---
 export function DashboardPage() {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/dashboard`);
-        const data = await response.json();
+        const token = await getAccessTokenSilently({
+          authorizationParams: {
+            audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+           },
+        });
+        const data = await apiClient.get('/api/dashboard', token);
         setDashboardData(data);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       }
     };
 
-    fetchDashboardData();
-  }, []);
+    if (isAuthenticated) {
+      fetchDashboardData();
+    }
+  }, [isAuthenticated]);
 
-  if (!dashboardData || !dashboardData.chargeback_status_summary || !dashboardData.nonipac_status_summary || !dashboardData.chargeback_time_windows || !dashboardData.nonipac_aging_schedule) {
+  if (!dashboardData) {
     return <p>Loading dashboard...</p>;
   }
 

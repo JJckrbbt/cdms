@@ -4,7 +4,7 @@ import { Chargeback, columns } from "@/components/chargebacks/columns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DetailsDrawer } from "@/components/DetailsDrawer";
 import { useAuth0 } from "@auth0/auth0-react";
-import { createApiClient } from "@/lib/api";
+import { apiClient } from "@/lib/api";
 
 const PAGE_SIZE = 500;
 
@@ -32,8 +32,16 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
 
   const fetchChargebacks = async () => {
     try {
-      const apiClient = createApiClient(getAccessTokenSilently);
-      const responseData = await apiClient.get(`/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`);
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
+
+      console.log("THE TOKEN IS: ", token);
+      console.log("TOKEN TYPE IS: ", typeof token);
+
+      const responseData = await apiClient.get(`/api/chargebacks?limit=${PAGE_SIZE}&page=${page}`, token);
 
       if (responseData && Array.isArray(responseData.data)) {
         setChargebacks(responseData.data);
@@ -74,7 +82,6 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
 
   const handleSaveChargeback = async (updatedData: Chargeback) => {
     try {
-      const apiClient = createApiClient(getAccessTokenSilently);
       if (typeof updatedData.id !== 'number') {
         console.error("Invalid ID for chargeback update:", updatedData.id);
         return;
@@ -93,6 +100,11 @@ export function ChargebacksPage({ onUploadSuccess }: ChargebacksPageProps) {
         chargeback_amount: updatedData.chargeback_amount,
       };
 
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
       await apiClient.patch(`/api/chargebacks/${updatedData.id}`, payload);
 
       // Refresh the data after successful update

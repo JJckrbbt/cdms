@@ -1,22 +1,13 @@
 import { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { PanelLeft, Sun, Moon } from "lucide-react";
 import { UploadReportModal } from "./UploadReportModal";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "../hooks/useTheme";
 import { Link } from 'react-router-dom';
-import { useAuth0 } from "@auth0/auth0-react";
+import { AuthenticationButton } from "./AuthenticationButton";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,9 +18,6 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { user, isAuthenticated, isLoading, loginWithRedirect, logout } = useAuth0();
-
-  console.log({ isLoading, isAuthenticated, user });
 
   const handleUploadReportClick = () => {
     setIsMobileMenuOpen(false);
@@ -70,38 +58,9 @@ export function DashboardLayout({ children, onUploadSuccess }: DashboardLayoutPr
                 onCheckedChange={toggleTheme}
               />
             </div>
-            {!isAuthenticated && !isLoading && (
-              <Button onClick={() => loginWithRedirect()}>Log In</Button>
-            )}
-
-            {isAuthenticated && user && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full"
-                >
-                  <Avatar>
-                    <AvatarImage src={user.picture} alt={user.name} />
-                    <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem
-                    onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
-                   >
-                    Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+            <AuthenticationButton />
           </div>
-          </header>
+        </header>
 
         <main className="flex-1 flex flex-col overflow-y-auto">
           <div className="p-6 h-full">

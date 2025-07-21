@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import toast from "react-hot-toast";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface UploadReportModalProps {
   onClose: () => void;
@@ -21,6 +22,7 @@ export function UploadReportModal({ onClose, onUploadSuccess }: UploadReportModa
   const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { getAccessTokenSilently } = useAuth0();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -39,17 +41,32 @@ export function UploadReportModal({ onClose, onUploadSuccess }: UploadReportModa
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("report_file", selectedFile);
-
+    
     try {
+      // 1. Get the access token
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
+
+      // 2. Prepare form data and headers
+      const formData = new FormData();
+      formData.append("report_file", selectedFile);
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      // 3. Make the secure fetch request
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/upload/${selectedReportType}`, {
         method: "POST",
+        headers, // No 'Content-Type', the browser sets it for FormData
         body: formData,
       });
 
       if (response.ok) {
-        toast.success("Upload successful!");
+        toast.success("Upload successful! Processing has begun.");
         onUploadSuccess();
         onClose();
       } else {
@@ -57,7 +74,7 @@ export function UploadReportModal({ onClose, onUploadSuccess }: UploadReportModa
         toast.error(`Upload failed: ${errorData.message || response.statusText}`);
       }
     } catch (error: any) {
-      toast.error(`Network error: ${error.message}`);
+      toast.error(`An error occurred: ${error.message}`);
     } finally {
       setIsUploading(false);
     }

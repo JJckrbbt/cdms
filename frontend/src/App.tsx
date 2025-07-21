@@ -9,11 +9,7 @@ import { AboutPage } from './pages/AboutPage';
 import UploadsPage from './pages/UploadsPage';
 
 function App() {
-  const handleUploadSuccess = () => {
-    // This function is called when an upload is successful.
-    // The UploadReportModal handles closing itself and showing toasts.
-    // Specific pages (like ChargebacksPage) will be responsible for refreshing their own data.
-  };
+  const handleUploadSuccess = () => {};
 
   const AppLayout = () => (
     <DashboardLayout onUploadSuccess={handleUploadSuccess}>

@@ -3,6 +3,8 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Delinquency, columns } from "@/components/delinquencies/columns";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { DetailsDrawer } from "@/components/DetailsDrawer";
+import { useAuth0 } from "@auth0/auth0-react";
+import { apiClient } from "@/lib/api";
 
 const statusOptions = [
   'Open',
@@ -29,12 +31,16 @@ export function DelinquenciesPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedDelinquency, setSelectedDelinquency] = useState<Delinquency | null>(null);
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
 
   const fetchDelinquencies = async () => {
     try {
-      // Assuming a similar API endpoint for delinquencies
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/delinquencies?limit=${PAGE_SIZE}&page=${page}`);
-      const responseData = await response.json();
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
+      const responseData = await apiClient.get(`/api/delinquencies?limit=${PAGE_SIZE}&page=${page}`, token);
       
       if (responseData && Array.isArray(responseData.data)) {
         setDelinquencies(responseData.data);
@@ -52,8 +58,10 @@ export function DelinquenciesPage() {
   };
 
   useEffect(() => {
-    fetchDelinquencies();
-  }, [page]);
+    if (isAuthenticated) {
+      fetchDelinquencies();
+    }
+  }, [page, isAuthenticated]);
 
   const handleRowClick = (delinquency: Delinquency) => {
     setSelectedDelinquency(delinquency);
@@ -66,17 +74,12 @@ export function DelinquenciesPage() {
         console.error("Invalid ID for delinquency update:", updatedData.id);
         return;
       }
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/delinquencies/${updatedData.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+      const token = await getAccessTokenSilently({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
         },
-        body: JSON.stringify(updatedData),
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      await apiClient.patch(`/api/delinquencies/${updatedData.id}`, token, updatedData);
 
       // Refresh the data after successful update
       fetchDelinquencies();
