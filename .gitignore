@@ -3,6 +3,7 @@
 .env
 .env*.local
 seed.sql
+seed_script.sh
 
 # Log files
 npm-debug.log*
