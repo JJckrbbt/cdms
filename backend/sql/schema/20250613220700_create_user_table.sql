@@ -1,5 +1,5 @@
 -- +goose Up
--- Create the "cdms_user" table with created_at, updated_at, is_active, and is_admin
+-- Create the "cdms_user" table with created_at, updated_at, is_active, is_admin, and is_super_admin
 
 CREATE TABLE "cdms_user" (
     "id" BIGSERIAL PRIMARY KEY,
@@ -12,7 +12,7 @@ CREATE TABLE "cdms_user" (
     "org" user_org NOT NULL,
     "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
     "is_admin" BOOLEAN NOT NULL DEFAULT FALSE,
-
+    "is_super_admin" BOOLEAN NOT NULL DEFAULT FALSE,
     "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
