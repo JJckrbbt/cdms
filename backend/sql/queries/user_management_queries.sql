@@ -93,3 +93,7 @@ WITH deleted AS (
 )
 INSERT INTO "user_business_line_access" (user_id, business_line)
 SELECT $1, unnest(@business_lines::chargeback_business_line[]);
+
+-- name: RemoveAllRolesFromUser :exec
+-- Removes all roles from a user.
+DELETE FROM "user_roles" WHERE user_id = $1;

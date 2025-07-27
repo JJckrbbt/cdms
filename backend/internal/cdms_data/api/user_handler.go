@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jjckrbbt/cdms/backend/internal/db"
 	"github.com/labstack/echo/v4"
-	"github.com/lib/pq"
 )
 
 // --- Structs for API responses and request bodies ---
@@ -37,7 +36,7 @@ type UserResponse struct {
 	Org       db.UserOrg         `json:"org"`
 	IsActive  bool               `json:"is_active"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	Roles     pq.StringArray     `json:"roles"`
+	Roles     []string           `json:"roles"`
 }
 
 // --- UserHandler and Constructor ---
@@ -98,7 +97,7 @@ func (h *UserHandler) HandleListUsers(c echo.Context) error {
 	}
 	offset := (page - 1) * limit
 
-	responseUsers := []UserResponse{}
+	var responseUsers []UserResponse
 	var err error
 
 	if canViewGlobal {
@@ -109,14 +108,20 @@ func (h *UserHandler) HandleListUsers(c echo.Context) error {
 		})
 		err = queryErr
 		for _, u := range users {
+			roles, _ := u.Roles.([]string) // Type assertion
 			responseUsers = append(responseUsers, UserResponse{
 				ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName,
-				Org: u.Org, IsActive: u.IsActive, CreatedAt: u.CreatedAt, Roles: u.Roles,
+				Org: u.Org, IsActive: u.IsActive, CreatedAt: u.CreatedAt, Roles: roles,
 			})
 		}
 	} else {
-		businessLinesTyped := make([]db.ChargebackBusinessLine, len(currentUser.BusinessLines))
-		for i, s := range currentUser.BusinessLines {
+		// Scoped view
+		businessLines, ok := currentUser.BusinessLines.([]string)
+		if !ok {
+			businessLines = []string{}
+		}
+		businessLinesTyped := make([]db.ChargebackBusinessLine, len(businessLines))
+		for i, s := range businessLines {
 			businessLinesTyped[i] = db.ChargebackBusinessLine(s)
 		}
 
@@ -128,9 +133,10 @@ func (h *UserHandler) HandleListUsers(c echo.Context) error {
 		})
 		err = queryErr
 		for _, u := range users {
+			roles, _ := u.Roles.([]string) // Type assertion
 			responseUsers = append(responseUsers, UserResponse{
 				ID: u.ID, Email: u.Email, FirstName: u.FirstName, LastName: u.LastName,
-				Org: u.Org, IsActive: u.IsActive, CreatedAt: u.CreatedAt, Roles: u.Roles,
+				Org: u.Org, IsActive: u.IsActive, CreatedAt: u.CreatedAt, Roles: roles,
 			})
 		}
 	}
@@ -161,7 +167,11 @@ func (h *UserHandler) HandleUpdateUser(c echo.Context) error {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, "Target user not found")
 		}
-		if !isSubset(targetUser.BusinessLines, currentUser.BusinessLines) {
+
+		targetBusinessLines, ok1 := targetUser.BusinessLines.([]string)
+		currentUserBusinessLines, ok2 := currentUser.BusinessLines.([]string)
+
+		if !ok1 || !ok2 || !isSubset(targetBusinessLines, currentUserBusinessLines) {
 			return echo.NewHTTPError(http.StatusForbidden, "Insufficient scope to manage this user")
 		}
 	}
@@ -187,10 +197,78 @@ func (h *UserHandler) HandleUpdateUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, updatedUser)
 }
 
+// HandleUpdateUserRoles updates a user's roles.
+func (h *UserHandler) HandleUpdateUserRoles(c echo.Context) error {
+	ctx := c.Request().Context()
+	targetUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+
+	var req UpdateUserRolesRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	// First, remove all existing roles from the user
+	if err := h.queries.RemoveAllRolesFromUser(ctx, targetUserID); err != nil {
+		h.logger.ErrorContext(ctx, "Failed to remove existing roles from user", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user roles")
+	}
+
+	// Then, assign the new roles
+	for _, roleID := range req.RoleIDs {
+		assignParams := db.AssignRoleToUserParams{
+			UserID: targetUserID,
+			RoleID: roleID,
+		}
+		if err := h.queries.AssignRoleToUser(ctx, assignParams); err != nil {
+			h.logger.ErrorContext(ctx, "Failed to assign role to user", "error", err)
+			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user roles")
+		}
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// HandleUpdateUserBusinessLines updates a user's business lines.
+func (h *UserHandler) HandleUpdateUserBusinessLines(c echo.Context) error {
+	ctx := c.Request().Context()
+	targetUserID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID format")
+	}
+
+	var req UpdateUserBusinessLinesRequest
+	if err := c.Bind(&req); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid request body")
+	}
+
+	businessLines := make([]db.ChargebackBusinessLine, len(req.BusinessLines))
+	for i, bl := range req.BusinessLines {
+		businessLines[i] = db.ChargebackBusinessLine(bl)
+	}
+
+	assignParams := db.AssignBusinessLinesToUserParams{
+		UserID:        targetUserID,
+		BusinessLines: businessLines,
+	}
+	if err := h.queries.AssignBusinessLinesToUser(ctx, assignParams); err != nil {
+		h.logger.ErrorContext(ctx, "Failed to assign business lines to user", "error", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to update user business lines")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
 // --- Helper Functions ---
 
-func hasPermission(permissions pq.StringArray, required string) bool {
-	for _, p := range permissions {
+func hasPermission(permissions interface{}, required string) bool {
+	perms, ok := permissions.([]string)
+	if !ok {
+		return false
+	}
+	for _, p := range perms {
 		if p == required {
 			return true
 		}
@@ -198,7 +276,7 @@ func hasPermission(permissions pq.StringArray, required string) bool {
 	return false
 }
 
-func isSubset(subset, superset pq.StringArray) bool {
+func isSubset(subset, superset []string) bool {
 	set := make(map[string]struct{}, len(superset))
 	for _, s := range superset {
 		set[s] = struct{}{}

@@ -185,7 +185,15 @@ func main() {
 	apiGroup.POST("/upload/:reportType", uploadHandler.HandleUpload)
 
 	//User Routes
-	apiGroup.GET("/users/me", userHandler.HandleGetMe)
+	userRoutes := apiGroup.Group("/users")
+	userRoutes.Use(userHandler.LoadUserContextMiddleware)
+	apiGroup.GET("/me", userHandler.HandleGetMe)
+	//Admin routes for user management
+	adminUserRoutes := userRoutes.Group("/admin")
+	adminUserRoutes.GET("", userHandler.HandleListUsers, api.RequirePermission("users:view_scoped"))
+	adminUserRoutes.PATCH("/:id", userHandler.HandleUpdateUser, api.RequirePermission("users:edit"))
+	adminUserRoutes.PATCH("/id/roles", userHandler.HandleUpdateUserRoles, api.RequirePermission("roles:assign_global"))
+	adminUserRoutes.PATCH("/:id/business-lines", userHandler.HandleUpdateUserBusinessLines, api.RequirePermission("roles:assign_scoped"))
 	//Upload Reporting Group
 	uploadRoutes := apiGroup.Group("/uploads")
 	uploadRoutes.GET("", uploadHandler.HandleGetUploads)

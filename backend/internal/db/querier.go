@@ -93,6 +93,8 @@ type Querier interface {
 	PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargebackParams) (Chargeback, error)
 	// Updates the user-modifiable fields of a specific delinquency record
 	PFSUpdateDelinquency(ctx context.Context, arg PFSUpdateDelinquencyParams) (Nonipac, error)
+	// Removes all roles from a user.
+	RemoveAllRolesFromUser(ctx context.Context, userID int64) error
 	// Removes a specific role from a user.
 	RemoveRoleFromUser(ctx context.Context, arg RemoveRoleFromUserParams) error
 	// Update the status of an upload record after processing is complete or has failed

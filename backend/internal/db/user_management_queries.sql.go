@@ -258,6 +258,16 @@ func (q *Queries) ListUsersByBusinessLines(ctx context.Context, arg ListUsersByB
 	return items, nil
 }
 
+const removeAllRolesFromUser = `-- name: RemoveAllRolesFromUser :exec
+DELETE FROM "user_roles" WHERE user_id = $1
+`
+
+// Removes all roles from a user.
+func (q *Queries) RemoveAllRolesFromUser(ctx context.Context, userID int64) error {
+	_, err := q.db.Exec(ctx, removeAllRolesFromUser, userID)
+	return err
+}
+
 const removeRoleFromUser = `-- name: RemoveRoleFromUser :exec
 DELETE FROM "user_roles" WHERE user_id = $1 AND role_id = $2
 `
