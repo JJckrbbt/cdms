@@ -12,6 +12,13 @@ sql:
         emit_json_tags: true
         emit_interface: true
         overrides:
+          - db_type: "text[]"
+            go_type: 
+              import: "github.com/lib/pq"
+              type: "StringArray"
+          - db_type: "pg_catalog.int4"
+            go_type: "github.com/jackc/pgx/v5/pgtype.Int4"
+            nullable: true
           - column: "active_chargebacks_with_vendor_info.total_chargeback_amount_sum"
             go_type: "github.com/shopspring/decimal.Decimal"
           - column: "active_nonipac_with_vendor_info.total_billed_amount_sum"

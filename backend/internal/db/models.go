@@ -589,7 +589,6 @@ type CdmsUser struct {
 	LastName            string             `json:"last_name"`
 	Org                 UserOrg            `json:"org"`
 	IsActive            bool               `json:"is_active"`
-	IsAdmin             bool               `json:"is_admin"`
 	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
 }
@@ -826,6 +825,12 @@ type NonipacStatusMerge struct {
 	StatusHistoryID int64 `json:"status_history_id"`
 }
 
+type Permission struct {
+	ID          int32       `json:"id"`
+	Action      string      `json:"action"`
+	Description pgtype.Text `json:"description"`
+}
+
 type RemovedRowsLog struct {
 	ID               pgtype.UUID        `json:"id"`
 	UploadID         pgtype.UUID        `json:"upload_id"`
@@ -833,6 +838,17 @@ type RemovedRowsLog struct {
 	ReportType       string             `json:"report_type"`
 	OriginalRowData  []byte             `json:"original_row_data"`
 	ReasonForRemoval string             `json:"reason_for_removal"`
+}
+
+type Role struct {
+	ID          int32       `json:"id"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
+}
+
+type RolePermission struct {
+	RoleID       int32 `json:"role_id"`
+	PermissionID int32 `json:"permission_id"`
 }
 
 type StatusHistory struct {
@@ -940,4 +956,9 @@ type Upload struct {
 type UserBusinessLineAccess struct {
 	UserID       int64                  `json:"user_id"`
 	BusinessLine ChargebackBusinessLine `json:"business_line"`
+}
+
+type UserRole struct {
+	UserID int64 `json:"user_id"`
+	RoleID int32 `json:"role_id"`
 }

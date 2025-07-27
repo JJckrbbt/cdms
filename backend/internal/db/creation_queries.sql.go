@@ -275,7 +275,7 @@ INSERT INTO "cdms_user" (
 ) VALUES (
     $1, $2, $3, $4, $5
 )
-RETURNING id, auth_provider_subject, email, first_name, last_name, org, is_active, is_admin, updated_at, created_at
+RETURNING id, auth_provider_subject, email, first_name, last_name, org, is_active, updated_at, created_at
 `
 
 type CreateUserFromAuthProviderParams struct {
@@ -303,7 +303,6 @@ func (q *Queries) CreateUserFromAuthProvider(ctx context.Context, arg CreateUser
 		&i.LastName,
 		&i.Org,
 		&i.IsActive,
-		&i.IsAdmin,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)

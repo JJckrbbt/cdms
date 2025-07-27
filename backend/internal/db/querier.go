@@ -15,6 +15,11 @@ type Querier interface {
 	AdminUpdateChargeback(ctx context.Context, arg AdminUpdateChargebackParams) (Chargeback, error)
 	// Updates the admin-modifiable fields of a specific delinquency record
 	AdminUpdateDelinquency(ctx context.Context, arg AdminUpdateDelinquencyParams) (Nonipac, error)
+	// Assigns a set of business lines to a user, replacing existing ones.
+	// This uses a CTE to first delete old assignments, then insert new ones.
+	AssignBusinessLinesToUser(ctx context.Context, arg AssignBusinessLinesToUserParams) error
+	// Assigns a specific role to a user.
+	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	// Inserts a new chargeback record,from a manual UI entry.
 	// The 'reporting_source' is hardcoded to 'ApplicationCreated'.
 	CreateChargeback(ctx context.Context, arg CreateChargebackParams) (Chargeback, error)
@@ -66,6 +71,8 @@ type Querier interface {
 	GetUpload(ctx context.Context, id pgtype.UUID) (GetUploadRow, error)
 	GetUserByAuthProviderSubject(ctx context.Context, authProviderSubject string) (CdmsUser, error)
 	GetUserByEmail(ctx context.Context, email string) (CdmsUser, error)
+	// Fetches a single user by their ID, including their roles, permissions, and business lines.
+	GetUserWithAuthorizationContext(ctx context.Context, id int64) (GetUserWithAuthorizationContextRow, error)
 	// //go:generate mockery --name Querier --output ./mocks --outpkg mocks
 	// Fetches a paginated list from the active_chargebacks_with_vendor_info view.
 	// The view is already filtered by is_active = true.
@@ -73,14 +80,25 @@ type Querier interface {
 	// Fetches a paginated list from the active_nonipac_with_vendor_info view.
 	// The view is already filtered by is_active = true.
 	ListActiveDelinquencies(ctx context.Context, arg ListActiveDelinquenciesParams) ([]ListActiveDelinquenciesRow, error)
+	// Fetches a paginated list of all users. For super_admins and global admins.
+	ListAllUsers(ctx context.Context, arg ListAllUsersParams) ([]ListAllUsersRow, error)
+	// Fetches all available roles in the system.
+	ListRoles(ctx context.Context) ([]Role, error)
 	// Provides a paginated list of recent report uploads and their statuses
 	ListUploads(ctx context.Context, arg ListUploadsParams) ([]ListUploadsRow, error)
+	// Fetches a paginated list of users who are associated with a given set of business lines.
+	// This is for scoped admins.
+	ListUsersByBusinessLines(ctx context.Context, arg ListUsersByBusinessLinesParams) ([]ListUsersByBusinessLinesRow, error)
 	// Updates the user-modifiable fields of a specific chargeback record
 	PFSUpdateChargeback(ctx context.Context, arg PFSUpdateChargebackParams) (Chargeback, error)
 	// Updates the user-modifiable fields of a specific delinquency record
 	PFSUpdateDelinquency(ctx context.Context, arg PFSUpdateDelinquencyParams) (Nonipac, error)
+	// Removes a specific role from a user.
+	RemoveRoleFromUser(ctx context.Context, arg RemoveRoleFromUserParams) error
 	// Update the status of an upload record after processing is complete or has failed
 	UpdateUploadStatus(ctx context.Context, arg UpdateUploadStatusParams) error
+	// Updates a user's mutable details.
+	UpdateUser(ctx context.Context, arg UpdateUserParams) (CdmsUser, error)
 	UpsertAgencyBureaus(ctx context.Context) (int64, error)
 	// Insert new records from the staging table, or update existing ones based on the business key
 	// The business key for chargebacks is BD Document Number + AL Number

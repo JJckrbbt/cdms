@@ -1,9 +1,14 @@
 -- +goose Up
 
 -- Insert the system user if it doesn't already exist.
-INSERT INTO "cdms_user" (first_name, last_name, org, email, is_admin, auth_provider_subject)
-SELECT 'System', 'User', 'GSA', 'system@cdms.local', TRUE, 'system|internal'
+INSERT INTO "cdms_user" (first_name, last_name, org, email, auth_provider_subject)
+SELECT 'System', 'User', 'GSA', 'system@cdms.local', 'system|internal'
 WHERE NOT EXISTS (SELECT 1 FROM "cdms_user" WHERE email = 'system@cdms.local');
+
+INSERT INTO "user_roles" (user_id, role_id)
+SELECT
+    (SELECT id FROM "cdms_user" WHERE email = 'system@cdms.local'),
+    (SELECT id FROM "roles" WHERE name = 'maintainer');
 
 -- +goose StatementBegin
 -- Re-create the function to include all logic, removing the need for a WHEN clause on the trigger.

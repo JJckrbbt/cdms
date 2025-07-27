@@ -89,6 +89,7 @@ func main() {
 	chargebackHandler := api.NewChargebackHandler(realQuerier, apiLogger)
 	delinquencyHandler := api.NewDelinquencyHandler(realQuerier, apiLogger)
 	dashboardHandler := api.NewDashboardHandler(realQuerier, apiLogger)
+	userHandler := api.NewUserHandler(realQuerier, apiLogger)
 
 	appLogger.Info("API handlers initialized.")
 
@@ -183,6 +184,8 @@ func main() {
 	//Upload group
 	apiGroup.POST("/upload/:reportType", uploadHandler.HandleUpload)
 
+	//User Routes
+	apiGroup.GET("/users/me", userHandler.HandleGetMe)
 	//Upload Reporting Group
 	uploadRoutes := apiGroup.Group("/uploads")
 	uploadRoutes.GET("", uploadHandler.HandleGetUploads)
@@ -213,9 +216,9 @@ func main() {
 		panic("y tho")
 	})
 
-	for _, route := range e.Routes() {
-		appLogger.Info("Registered Route", "method", route.Method, "path", route.Path)
-	}
+	//for _, route := range e.Routes() {
+	//	appLogger.Info("Registered Route", "method", route.Method, "path", route.Path)
+	//}
 
 	// 9. Start the HTTP server.
 	port := os.Getenv("PORT")
